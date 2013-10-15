@@ -30,7 +30,7 @@ set.seed(54321)
 
 ## number of cpu cores available for the analysis pipeline
 ## set to 'NULL' if all the available cores should be used
-nbcore <- 32
+nbcore <- 8
 availcore <- parallel::detectCores()
 if (is.null(nbcore) || nbcore > availcore) { ncore <- availcore }
 options("mc.cores"=nbcore)
