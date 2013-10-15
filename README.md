@@ -1,6 +1,5 @@
- ------------------------------------------------
-| Inconsistency in large pharmacogenomic studies |
- ------------------------------------------------
+Inconsistency in large pharmacogenomic studies
+==============================================
 
 
 Abstract
