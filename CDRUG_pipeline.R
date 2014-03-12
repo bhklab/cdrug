@@ -25,6 +25,11 @@ source(file.path("CDRUG_foo.R"))
 ########################
 ## global parameters
 
+## set method for downloading
+# options(download.file.method="auto")
+options(download.file.method="curl")
+## change to curl, wget or internal depending on your system
+
 ## set random seed to ensuer reproducibility of the resuls
 set.seed(54321)
 
