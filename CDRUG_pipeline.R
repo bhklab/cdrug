@@ -32,7 +32,7 @@ set.seed(54321)
 ## set to 'NULL' if all the available cores should be used
 nbcore <- 8
 availcore <- parallel::detectCores()
-if (is.null(nbcore) || nbcore > availcore) { ncore <- availcore }
+if (is.null(nbcore) || nbcore > availcore) { nbcore <- availcore }
 options("mc.cores"=nbcore)
 
 ## list of characters to be removed from row and column names

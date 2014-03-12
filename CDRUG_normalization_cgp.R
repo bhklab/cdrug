@@ -76,15 +76,15 @@ file.copy(from=file.path(rawpath, "dwl", "gdsc_compounds_conc_w2.csv"), to=file.
   
 ## download cell line annotations and COSMIC IDs
 ## annotations from COSMIC cell line project
-dda <- "v65_280513"
-dwl.status <- download.file(url=sprintf("ftp://ftp.sanger.ac.uk/pub/CGP/cosmic/data_export/CosmicCellLineProject_%s.tsv.gz", dda), destfile=file.path(rawpath, "dwl", sprintf("CosmicCellLineProject_%s.tsv.gz", dda)))
+dda <- "v68"
+dwl.status <- download.file(url=sprintf("ftp://ftp.sanger.ac.uk//pub/CGP/cell_lines_project/data_export/CosmicCellLineProject_%s.tsv.gz", dda), destfile=file.path(rawpath, "dwl", sprintf("CosmicCellLineProject_%s.tsv.gz", dda)))
 if(dwl.status != 0) { stop("Download failed, please rerun the pipeline! It may be that there is a new version of the file CosmicCellLineProject, please look at ftp://ftp.sanger.ac.uk/pub/CGP/cosmic/data_export/ and update the script accordingly ...") }
 ## untar
 res <- R.utils::gunzip(filename=file.path(rawpath, "dwl", sprintf("CosmicCellLineProject_%s.tsv.gz", dda)), overwrite=TRUE)
 file.copy(from=file.path(rawpath, "dwl", sprintf("CosmicCellLineProject_%s.tsv", dda)), to=file.path(rawpath, "cosmic_celline_collection.csv"))
 cosmic.celline <- read.csv(file=file.path(rawpath, "cosmic_celline_collection.csv"), sep="\t", stringsAsFactors=FALSE)
 cosmic.celline[cosmic.celline == "" | cosmic.celline == " " | cosmic.celline == "  "] <- NA
-cosmic.celline <- cosmic.celline[- c(grep("row selected", cosmic.celline[ ,1]), grep("rows selected", cosmic.celline[ ,1])), , drop=FALSE]
+# cosmic.celline <- cosmic.celline[- c(grep("row selected", cosmic.celline[ ,1]), grep("rows selected", cosmic.celline[ ,1])), , drop=FALSE]
 ## remove cell line with no name
 cosmic.celline <- cosmic.celline[!is.na(cosmic.celline[ , "Sample.name"]), , drop=FALSE]
 ## merge the gene targets
@@ -307,7 +307,7 @@ if(!file.exists(myfn)) {
   xx <- -log10(ic50[ , "drugid_1003", drop=FALSE])
   ccix <- complete.cases(xx, yy)
   nnn <- sum(ccix)
-  cc <- cor.test(x=xx, y=yy, method="spearman", use="complete.obs")
+  cc <- cor.test(x=xx, y=yy, method="spearman", use="complete.obs", alternative="greater")
   cci <- spearmanCI(x=cc$estimate, n=sum(ccix))
   par(mar=c(4, 4, 3, 1) + 0.1)
   llim <- round(range(c(xx, yy), na.rm=TRUE) * 10) / 10

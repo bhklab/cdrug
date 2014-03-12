@@ -443,7 +443,7 @@ sensitivity.calling.waterfall <- function(x, type=c("ic50", "actarea", "amax"), 
     }
   )
   oo <- order(xx, decreasing=TRUE)
-  ## test linearity with Perason correlation
+  ## test linearity with Pearson correlation
   cc <- cor.test(-xx[oo], 1:length(oo), method="pearson")
   ## line between the two extreme sensitivity values
   dd <- cbind("y"=xx[oo][c(1, length(oo))], "x"=c(1, length(oo)))
