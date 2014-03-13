@@ -431,8 +431,6 @@ if(!file.exists(myfn)) {
 
   ## build annotation matrix
   message("Build annotation matrix")
-  library(biomaRt)
-  mart.db <- biomaRt::useMart("ENSEMBL_MART_ENSEMBL", host="www.ensembl.org", dataset="hsapiens_gene_ensembl")
   ## select the best probe for a single gene
   library(jetset)
   js <- jetset::jscores(chip="hgu133plus2", probeset=colnames(datat))
@@ -467,18 +465,8 @@ if(!file.exists(myfn)) {
   	myscore <- myscore[!duplicated(myscore[ , "gid"]), , drop=FALSE]
   	js[myscore[ ,"probe"], "best"] <- TRUE
   }
-  ## more annotations from biomart
-  ugid <- sort(unique(js[ ,"EntrezID"]))
-  ss <- "entrezgene"
-  gene.an <- biomaRt::getBM(attributes=c(ss, "ensembl_gene_id", "hgnc_symbol", "unigene", "description", "chromosome_name", "start_position", "end_position", "strand", "band"), filters="entrezgene", values=ugid, mart=mart.db)
-  gene.an[gene.an == "" | gene.an == " "] <- NA
-  gene.an <- gene.an[!is.na(gene.an[ , ss]) & !duplicated(gene.an[ , ss]), , drop=FALSE]
-  gene.an <- gene.an[is.element(gene.an[ ,ss], ugid), ,drop=FALSE]
-  annot <- data.frame(matrix(NA, nrow=ncol(datat), ncol=ncol(gene.an)+1, dimnames=list(colnames(datat), c("probe", colnames(gene.an)))))
-  annot[match(gene.an[ , ss], js[ ,"EntrezID"]), colnames(gene.an)] <- gene.an
-  annot[ ,"probe"] <- colnames(datat)
-  colnames(js)[colnames(js) != "best"] <- paste("jetset", colnames(js)[colnames(js) != "best"], sep=".")
-  annot <- data.frame(annot, "EntrezGene.ID"=js[ ,"jetset.EntrezID"], js)
+  annot <- data.frame("probe"=rownames(js), "EntrezGene.ID"=js[ ,"EntrezID"], js)
+  annot <- annot[colnames(datat), , drop=FALSE]
 
   ## keep only experiments for which we have all the info
   myx <- fold(intersect, rownames(drugpheno), rownames(sampleinfo), rownames(datat))
