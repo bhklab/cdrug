@@ -46,7 +46,7 @@ options("mc.cores"=nbcore)
 ## use COMIC annotations for cell lines (computationally intensive)?
 cosmic.annot <- FALSE
 ## COSMIC version
-cosmic.version <-= "v68"
+cosmic.version <- "v68"
 
 ## list of characters to be removed from row and column names
 badchars <- "[\xb5]|[\n]|[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[\\]|[.]|[_]|[ ]"
