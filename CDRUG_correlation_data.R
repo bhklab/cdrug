@@ -21,10 +21,10 @@ if(!file.exists(myfn)) {
   load(file.path(saveres, "cgp_full_frma.RData"))
   ## gene centric data
   myx <- which(annot.full.cgp[ ,"best"])
-  myx <- myx[!duplicated(annot.full.cgp[myx, "jetset.EntrezID"])]
+  myx <- myx[!duplicated(annot.full.cgp[myx, "EntrezID"])]
   data.full.cgp <- data.full.cgp[ , myx,drop=FALSE]
   annot.full.cgp <- annot.full.cgp[myx, ,drop=FALSE]
-  colnames(data.full.cgp) <- rownames(annot.full.cgp) <- paste("geneid", annot.full.cgp[ , "jetset.EntrezID"], sep="_")
+  colnames(data.full.cgp) <- rownames(annot.full.cgp) <- paste("geneid", annot.full.cgp[ , "EntrezID"], sep="_")
   
   ## select the top most variant genes
   varg <- unique(c(colnames(data.full.cgp)[order(apply(data.full.cgp, 2, var, na.rm=TRUE), decreasing=TRUE)[1:topvar]], colnames(data.full.cgp)[order(apply(data.full.cgp, 2, var, na.rm=TRUE), decreasing=TRUE)[1:topvar]]))

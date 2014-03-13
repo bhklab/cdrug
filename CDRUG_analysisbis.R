@@ -571,7 +571,7 @@ myGSEAbis.ic50 <- function(myfn, myfn2) {
       ss <- sort(ss, decreasing=TRUE, na.last=NA)
       ss[ss == Inf] <- .Machine$double.xmax
       ss[ss == -Inf] <- -.Machine$double.xmax
-      rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+      rankg <- cbind(annot[names(ss), "EntrezID"], ss)
       fff <- file.path(saveres, "GSEAbis", "rankings", "CCLE", "ALLTISSUES", sprintf("ic50_%s.rnk", gsub("drugid_", "", names(assoc.ic50.ccle)[i])))
       write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
       rank.files <- c(rank.files, fff)  
@@ -601,7 +601,7 @@ myGSEAbis.ic50 <- function(myfn, myfn2) {
       ss <- sort(ss, decreasing=TRUE, na.last=NA)
       ss[ss == Inf] <- .Machine$double.xmax
       ss[ss == -Inf] <- -.Machine$double.xmax
-      rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+      rankg <- cbind(annot[names(ss), "EntrezID"], ss)
       fff <- file.path(saveres, "GSEAbis", "rankings", "CGP", "ALLTISSUES", sprintf("ic50_%s.rnk", gsub("drugid_", "", names(assoc.ic50.cgp)[i])))
       write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
       rank.files <- c(rank.files, fff)  
@@ -664,7 +664,7 @@ myGSEAbis.auc <- function(myfn, myfn2) {
       ss <- sort(ss, decreasing=TRUE, na.last=NA)
       ss[ss == Inf] <- .Machine$double.xmax
       ss[ss == -Inf] <- -.Machine$double.xmax
-      rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+      rankg <- cbind(annot[names(ss), "EntrezID"], ss)
       fff <- file.path(saveres, "GSEAbis", "rankings", "CCLE", "ALLTISSUES", sprintf("auc_%s.rnk", gsub("drugid_", "", names(assoc.auc.ccle)[i])))
       write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
       rank.files <- c(rank.files, fff)  
@@ -694,7 +694,7 @@ myGSEAbis.auc <- function(myfn, myfn2) {
       ss <- sort(ss, decreasing=TRUE, na.last=NA)
       ss[ss == Inf] <- .Machine$double.xmax
       ss[ss == -Inf] <- -.Machine$double.xmax
-      rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+      rankg <- cbind(annot[names(ss), "EntrezID"], ss)
       fff <- file.path(saveres, "GSEAbis", "rankings", "CGP", "ALLTISSUES", sprintf("auc_%s.rnk", gsub("drugid_", "", names(assoc.auc.cgp)[i])))
       write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
       rank.files <- c(rank.files, fff)  

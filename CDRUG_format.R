@@ -17,10 +17,10 @@ require(Vennerable) || stop("Library Vennerable is not available")
 load(file.path(saveres, "cgp_frma.RData"))
 ## gene centric data
 myx <- which(annot.ge.cgp[ ,"best"])
-myx <- myx[!duplicated(annot.ge.cgp[myx,"jetset.EntrezID"])]
+myx <- myx[!duplicated(annot.ge.cgp[myx,"EntrezID"])]
 data.cgp <- data.ge.cgp[ ,myx,drop=FALSE]
 annot.cgp <- annot.ge.cgp[myx, ,drop=FALSE]
-colnames(data.cgp) <- rownames(annot.cgp) <- paste("geneid", annot.cgp[ ,"jetset.EntrezID"], sep="_")
+colnames(data.cgp) <- rownames(annot.cgp) <- paste("geneid", annot.cgp[ ,"EntrezID"], sep="_")
 ## drug information
 druginfo.cgp <- druginfo.ge.cgp
 ## sample information
@@ -34,10 +34,10 @@ drugconc.cgp <- drugconc.ge.cgp
 load(file.path(saveres, "ccle_frma.RData"))
 ## gene centric data
 myx <- which(annot.ge.ccle[ ,"best"])
-myx <- myx[!duplicated(annot.ge.ccle[myx,"jetset.EntrezID"])]
+myx <- myx[!duplicated(annot.ge.ccle[myx,"EntrezID"])]
 data.ccle <- data.ge.ccle[ ,myx,drop=FALSE]
 annot.ccle <- annot.ge.ccle[myx, ,drop=FALSE]
-colnames(data.ccle) <- rownames(annot.ccle) <- paste("geneid", annot.ccle[ ,"jetset.EntrezID"], sep="_")
+colnames(data.ccle) <- rownames(annot.ccle) <- paste("geneid", annot.ccle[ ,"EntrezID"], sep="_")
 ## drug information
 druginfo.ccle <- druginfo.ge.ccle
 ## sample information
@@ -51,10 +51,10 @@ drugconc.ccle <- drugconc.ge.ccle
 load(file.path(saveres, "gskcellines_frma.RData"))
 ## gene centric data
 myx <- which(annot.ge.gsk[ ,"best"])
-myx <- myx[!duplicated(annot.ge.gsk[myx,"jetset.EntrezID"])]
+myx <- myx[!duplicated(annot.ge.gsk[myx,"EntrezID"])]
 data.gsk <- data.ge.gsk[ ,myx,drop=FALSE]
 annot.gsk <- annot.ge.gsk[myx, ,drop=FALSE]
-colnames(data.gsk) <- rownames(annot.gsk) <- paste("geneid", annot.gsk[ ,"jetset.EntrezID"], sep="_")
+colnames(data.gsk) <- rownames(annot.gsk) <- paste("geneid", annot.gsk[ ,"EntrezID"], sep="_")
 ## sample information
 sampleinfo.gsk <- sampleinfo.ge.gsk
 ## drug sensitivity

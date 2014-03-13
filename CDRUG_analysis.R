@@ -899,7 +899,7 @@ for(ii in 1:length(tissuen)) {
     ## CCLE
     rr <- NULL
     for(i in 1:length(assoc.ic50.ccle)) {
-      tt <- cbind(assoc.ic50.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.ccle[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.ccle[[i]]), "jetset.symbol"])
+      tt <- cbind(assoc.ic50.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.ccle[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.ccle[[i]]), "jetset.symbol"])
       rr <- c(rr, list(data.frame(tt)))
     }
     names(rr) <- names(assoc.ic50.ccle)
@@ -907,7 +907,7 @@ for(ii in 1:length(tissuen)) {
     ## CGP
     rr <- NULL
     for(i in 1:length(assoc.ic50.cgp)) {
-      tt <- cbind(assoc.ic50.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.cgp[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.cgp[[i]]), "jetset.symbol"])
+      tt <- cbind(assoc.ic50.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.cgp[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.cgp[[i]]), "jetset.symbol"])
       rr <- c(rr, list(data.frame(tt)))
     }
     names(rr) <- names(assoc.ic50.cgp)
@@ -996,7 +996,7 @@ if(!file.exists(myfn)) {
   ## CCLE
   rr <- NULL
   for(i in 1:length(assoc.ic50.ccle)) {
-    tt <- cbind(assoc.ic50.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.ccle[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.ccle[[i]]), "jetset.symbol"])
+    tt <- cbind(assoc.ic50.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.ccle[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.ccle[[i]]), "jetset.symbol"])
     rr <- c(rr, list(data.frame(tt)))
   }
   names(rr) <- names(assoc.ic50.ccle)
@@ -1004,7 +1004,7 @@ if(!file.exists(myfn)) {
   ## CGP
   rr <- NULL
   for(i in 1:length(assoc.ic50.cgp)) {
-    tt <- cbind(assoc.ic50.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.cgp[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.cgp[[i]]), "jetset.symbol"])
+    tt <- cbind(assoc.ic50.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.cgp[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.cgp[[i]]), "jetset.symbol"])
     rr <- c(rr, list(data.frame(tt)))
   }
   names(rr) <- names(assoc.ic50.cgp)
@@ -1225,7 +1225,7 @@ if(!file.exists(myfn)) {
   ## CCLE
   rr <- NULL
   for(i in 1:length(assoc.ic50.call.ccle)) {
-    tt <- cbind(assoc.ic50.call.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.call.ccle[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.call.ccle[[i]]), "jetset.symbol"])
+    tt <- cbind(assoc.ic50.call.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.call.ccle[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.call.ccle[[i]]), "jetset.symbol"])
     rr <- c(rr, list(data.frame(tt)))
   }
   names(rr) <- names(assoc.ic50.call.ccle)
@@ -1233,7 +1233,7 @@ if(!file.exists(myfn)) {
   ## CGP
   rr <- NULL
   for(i in 1:length(assoc.ic50.call.cgp)) {
-    tt <- cbind(assoc.ic50.call.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.call.cgp[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.call.cgp[[i]]), "jetset.symbol"])
+    tt <- cbind(assoc.ic50.call.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.call.cgp[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.call.cgp[[i]]), "jetset.symbol"])
     rr <- c(rr, list(data.frame(tt)))
   }
   names(rr) <- names(assoc.ic50.call.cgp)
@@ -1341,7 +1341,7 @@ for(ii in 1:length(tissuen)) {
     ## CCLE
     rr <- NULL
     for(i in 1:length(assoc.auc.ccle)) {
-      tt <- cbind(assoc.auc.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.ccle[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.ccle[[i]]), "jetset.symbol"])
+      tt <- cbind(assoc.auc.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.ccle[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.ccle[[i]]), "jetset.symbol"])
       rr <- c(rr, list(data.frame(tt)))
     }
     names(rr) <- names(assoc.auc.ccle)
@@ -1349,7 +1349,7 @@ for(ii in 1:length(tissuen)) {
     ## CGP
     rr <- NULL
     for(i in 1:length(assoc.auc.cgp)) {
-      tt <- cbind(assoc.auc.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.cgp[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.cgp[[i]]), "jetset.symbol"])
+      tt <- cbind(assoc.auc.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.cgp[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.cgp[[i]]), "jetset.symbol"])
       rr <- c(rr, list(data.frame(tt)))
     }
     names(rr) <- names(assoc.auc.cgp)
@@ -1438,7 +1438,7 @@ if(!file.exists(myfn)) {
   ## CCLE
   rr <- NULL
   for(i in 1:length(assoc.auc.ccle)) {
-    tt <- cbind(assoc.auc.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.ccle[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.ccle[[i]]), "jetset.symbol"])
+    tt <- cbind(assoc.auc.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.ccle[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.ccle[[i]]), "jetset.symbol"])
     rr <- c(rr, list(data.frame(tt)))
   }
   names(rr) <- names(assoc.auc.ccle)
@@ -1446,7 +1446,7 @@ if(!file.exists(myfn)) {
   ## CGP
   rr <- NULL
   for(i in 1:length(assoc.auc.cgp)) {
-    tt <- cbind(assoc.auc.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.cgp[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.cgp[[i]]), "jetset.symbol"])
+    tt <- cbind(assoc.auc.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.cgp[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.cgp[[i]]), "jetset.symbol"])
     rr <- c(rr, list(data.frame(tt)))
   }
   names(rr) <- names(assoc.auc.cgp)
@@ -1669,7 +1669,7 @@ if(!file.exists(myfn)) {
   ## CCLE
   rr <- NULL
   for(i in 1:length(assoc.auc.call.ccle)) {
-    tt <- cbind(assoc.auc.call.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.call.ccle[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.call.ccle[[i]]), "jetset.symbol"])
+    tt <- cbind(assoc.auc.call.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.call.ccle[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.call.ccle[[i]]), "jetset.symbol"])
     rr <- c(rr, list(data.frame(tt)))
   }
   names(rr) <- names(assoc.auc.call.ccle)
@@ -1677,7 +1677,7 @@ if(!file.exists(myfn)) {
   ## CGP
   rr <- NULL
   for(i in 1:length(assoc.auc.call.cgp)) {
-    tt <- cbind(assoc.auc.call.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.call.cgp[[i]]), "jetset.EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.call.cgp[[i]]), "jetset.symbol"])
+    tt <- cbind(assoc.auc.call.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.call.cgp[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.call.cgp[[i]]), "jetset.symbol"])
     rr <- c(rr, list(data.frame(tt)))
   }
   names(rr) <- names(assoc.auc.call.cgp)
@@ -2147,7 +2147,7 @@ for(ii in 1:length(tissuen)) {
         ss <- sort(ss, decreasing=TRUE, na.last=NA)
         ss[ss == Inf] <- .Machine$double.xmax
         ss[ss == -Inf] <- -.Machine$double.xmax
-        rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+        rankg <- cbind(annot[names(ss), "EntrezID"], ss)
         fff <- file.path(saveres, "GSEA", "rankings", "CCLE", ttt, sprintf("ic50_%s.rnk", gsub("drugid_", "", names(assoc.ic50.ccle)[i])))
         write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
         rank.files <- c(rank.files, fff)  
@@ -2180,7 +2180,7 @@ for(ii in 1:length(tissuen)) {
         ss <- sort(ss, decreasing=TRUE, na.last=NA)
         ss[ss == Inf] <- .Machine$double.xmax
         ss[ss == -Inf] <- -.Machine$double.xmax
-        rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+        rankg <- cbind(annot[names(ss), "EntrezID"], ss)
         fff <- file.path(saveres, "GSEA", "rankings", "CGP", ttt, sprintf("ic50_%s.rnk", gsub("drugid_", "", names(assoc.ic50.cgp)[i])))
         write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
         rank.files <- c(rank.files, fff)  
@@ -2263,7 +2263,7 @@ if(!file.exists(myfn2)) {
     ss <- sort(ss, decreasing=TRUE, na.last=NA)
     ss[ss == Inf] <- .Machine$double.xmax
     ss[ss == -Inf] <- -.Machine$double.xmax
-    rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+    rankg <- cbind(annot[names(ss), "EntrezID"], ss)
     fff <- file.path(saveres, "GSEA", "rankings", "CCLE", "ALLTISSUES", sprintf("ic50_%s.rnk", gsub("drugid_", "", names(assoc.ic50.ccle)[i])))
     write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
     rank.files <- c(rank.files, fff)  
@@ -2296,7 +2296,7 @@ if(!file.exists(myfn2)) {
     ss <- sort(ss, decreasing=TRUE, na.last=NA)
     ss[ss == Inf] <- .Machine$double.xmax
     ss[ss == -Inf] <- -.Machine$double.xmax
-    rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+    rankg <- cbind(annot[names(ss), "EntrezID"], ss)
     fff <- file.path(saveres, "GSEA", "rankings", "CGP", "ALLTISSUES", sprintf("ic50_%s.rnk", gsub("drugid_", "", names(assoc.ic50.cgp)[i])))
     write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
     rank.files <- c(rank.files, fff)  
@@ -2484,7 +2484,7 @@ for(i in 1:length(assoc.ic50.call.ccle)) {
   ss <- sort(ss, decreasing=TRUE, na.last=NA)
   ss[ss == Inf] <- .Machine$double.xmax
   ss[ss == -Inf] <- -.Machine$double.xmax
-  rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+  rankg <- cbind(annot[names(ss), "EntrezID"], ss)
   fff <- file.path(saveres, "GSEA", "rankings", "CCLE", "ALLTISSUES", sprintf("ic50_call_%s.rnk", gsub("drugid_", "", names(assoc.ic50.call.ccle)[i])))
   write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
   rank.files <- c(rank.files, fff)  
@@ -2517,7 +2517,7 @@ for(i in 1:length(assoc.ic50.call.cgp)) {
   ss <- sort(ss, decreasing=TRUE, na.last=NA)
   ss[ss == Inf] <- .Machine$double.xmax
   ss[ss == -Inf] <- -.Machine$double.xmax
-  rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+  rankg <- cbind(annot[names(ss), "EntrezID"], ss)
   fff <- file.path(saveres, "GSEA", "rankings", "CGP", "ALLTISSUES", sprintf("ic50_call_%s.rnk", gsub("drugid_", "", names(assoc.ic50.call.cgp)[i])))
   write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
   rank.files <- c(rank.files, fff)  
@@ -2611,7 +2611,7 @@ for(ii in 1:length(tissuen)) {
         ss <- sort(ss, decreasing=TRUE, na.last=NA)
         ss[ss == Inf] <- .Machine$double.xmax
         ss[ss == -Inf] <- -.Machine$double.xmax
-        rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+        rankg <- cbind(annot[names(ss), "EntrezID"], ss)
         fff <- file.path(saveres, "GSEA", "rankings", "CCLE", ttt, sprintf("auc_%s.rnk", gsub("drugid_", "", names(assoc.auc.ccle)[i])))
         write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
         rank.files <- c(rank.files, fff)  
@@ -2644,7 +2644,7 @@ for(ii in 1:length(tissuen)) {
         ss <- sort(ss, decreasing=TRUE, na.last=NA)
         ss[ss == Inf] <- .Machine$double.xmax
         ss[ss == -Inf] <- -.Machine$double.xmax
-        rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+        rankg <- cbind(annot[names(ss), "EntrezID"], ss)
         fff <- file.path(saveres, "GSEA", "rankings", "CGP", ttt, sprintf("auc_%s.rnk", gsub("drugid_", "", names(assoc.auc.cgp)[i])))
         write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
         rank.files <- c(rank.files, fff)  
@@ -2727,7 +2727,7 @@ if(!file.exists(myfn2)) {
     ss <- sort(ss, decreasing=TRUE, na.last=NA)
     ss[ss == Inf] <- .Machine$double.xmax
     ss[ss == -Inf] <- -.Machine$double.xmax
-    rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+    rankg <- cbind(annot[names(ss), "EntrezID"], ss)
     fff <- file.path(saveres, "GSEA", "rankings", "CCLE", "ALLTISSUES", sprintf("auc_%s.rnk", gsub("drugid_", "", names(assoc.auc.ccle)[i])))
     write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
     rank.files <- c(rank.files, fff)  
@@ -2760,7 +2760,7 @@ if(!file.exists(myfn2)) {
     ss <- sort(ss, decreasing=TRUE, na.last=NA)
     ss[ss == Inf] <- .Machine$double.xmax
     ss[ss == -Inf] <- -.Machine$double.xmax
-    rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+    rankg <- cbind(annot[names(ss), "EntrezID"], ss)
     fff <- file.path(saveres, "GSEA", "rankings", "CGP", "ALLTISSUES", sprintf("auc_%s.rnk", gsub("drugid_", "", names(assoc.auc.cgp)[i])))
     write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
     rank.files <- c(rank.files, fff)  
@@ -2948,7 +2948,7 @@ for(i in 1:length(assoc.auc.call.ccle)) {
   ss <- sort(ss, decreasing=TRUE, na.last=NA)
   ss[ss == Inf] <- .Machine$double.xmax
   ss[ss == -Inf] <- -.Machine$double.xmax
-  rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+  rankg <- cbind(annot[names(ss), "EntrezID"], ss)
   fff <- file.path(saveres, "GSEA", "rankings", "CCLE", "ALLTISSUES", sprintf("auc_call_%s.rnk", gsub("drugid_", "", names(assoc.auc.call.ccle)[i])))
   write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
   rank.files <- c(rank.files, fff)  
@@ -2981,7 +2981,7 @@ for(i in 1:length(assoc.auc.call.cgp)) {
   ss <- sort(ss, decreasing=TRUE, na.last=NA)
   ss[ss == Inf] <- .Machine$double.xmax
   ss[ss == -Inf] <- -.Machine$double.xmax
-  rankg <- cbind(annot[names(ss), "jetset.EntrezID"], ss)
+  rankg <- cbind(annot[names(ss), "EntrezID"], ss)
   fff <- file.path(saveres, "GSEA", "rankings", "CGP", "ALLTISSUES", sprintf("auc_call_%s.rnk", gsub("drugid_", "", names(assoc.auc.call.cgp)[i])))
   write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
   rank.files <- c(rank.files, fff)  
