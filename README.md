@@ -53,12 +53,17 @@ Note that you may need to install Perl (http://www.perl.org/get.html)  and  its 
 
 cpan Text/CSV_XS.pm
 
+The Vennerable R package is not available on CRAN and should be downloaded and installed using the following commands:
+
+download.file(url="http://download.r-forge.r-project.org/src/contrib/Vennerable_3.0.tar.gz", destfile="Vennerable_3.0.tar.gz")
+install.packages("Vennerable_3.0.tar.gz", repos=NULL, type="source")
+
 Lastly, follow the instructions on the CBS website to properly install the jetset  package or use  the following commands in R:
 
-download.file(url="http://www.cbs.dtu.dk/biotools/jetset/current/jetset_1.4.0.tar.gz", destfile="jetset_1.4.0.tar.gz")
-install.packages("jetset_1.4.0.tar.gz", repos=NULL, type="source")
+download.file(url="http://www.cbs.dtu.dk/biotools/jetset/current/jetset_1.6.0.tar.gz", destfile="jetset_1.6.0.tar.gz")
+install.packages("jetset_1.6.0.tar.gz", repos=NULL, type="source")
 
-Once  the packages are installed, clone the cdrug repository to get all the R scripts. GSEA jar file (http://www.broadinstitute.org/gsea/msigdb/download.file.jsp?filePath=/resources/software/gsea2-2.0.13.jar) and the geneset collection (http://www.broadinstitute.org/gsea/msigdb/download.file.jsp?filePath=/resources/msigdb/4.0/c5.all.v4.0.entrez.gmt) should be downloaded from the broad website.
+Once  the packages are installed, clone the cdrug repository to get all the R scripts. GSEA jar file (http://www.broadinstitute.org/gsea/msigdb/download_file.jsp?filePath=/resources/software/gsea2-2.0.14.jar) and the geneset collection (http://www.broadinstitute.org/gsea/msigdb/download_file.jsp?filePath=/resources/msigdb/4.0/c5.all.v4.0.entrez.gmt) should be downloaded from the broad website.
 
 * CDRUG_foo.R: Script containing  the definitions of all functions  required  for the analysis pipeline.
 
