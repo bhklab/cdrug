@@ -30,7 +30,7 @@ gsea.prerank <- function(exe.path, gmt.path, rank.path, chip.path, gsea.collapse
 	   #warning("output directory already exists!")
 	   dirfn <- dir(file.path(gsea.out, gsea.report))
      if(!file.exists(file.path(gsea.out, gsea.report, "index.html"))) { stop("Existing but incomplete output directory") }
-	   tt <- rbind(read.csv(file.path(gsea.out, gsea.report, dirfn[grep("gsea_report_for_na_pos_", dirfn)[2]]), stringsAsFactors=FALSE, sep="\t", header=TRUE), read.csv(file.path(gsea.out, gsea.report, dirfn[grep("gsea_report_for_na_neg_", dirfn)[2]]), stringsAsFactors=FALSE, sep="\t", header=TRUE))
+	   tt <- rbind(read.csv(file.path(gsea.out, gsea.report, dirfn[grep("gsea_report_for_na_pos_", dirfn)[2]]), sep="\t", header=TRUE), read.csv(file.path(gsea.out, gsea.report, dirfn[grep("gsea_report_for_na_neg_", dirfn)[2]]), sep="\t", header=TRUE))
 		rownames(tt) <- as.character(tt[ ,"NAME"])
     tt <- tt[ , !apply(tt, 2, function(x) { return(all(is.na(x))) }), drop=FALSE]
 	} else {
@@ -43,7 +43,7 @@ gsea.prerank <- function(exe.path, gmt.path, rank.path, chip.path, gsea.collapse
   		rest <- dir(gsea.out)
   		rest <- rest[grep(pattern=sprintf("%s.GseaPreranked", gsea.report), x=rest)[1]]
   		restn <- sapply(strsplit(rest, "[.]"), function(x) { return(x[length(x)]) })
-  		tt <- rbind(read.csv(file.path(gsea.out, rest, sprintf("gsea_report_for_na_pos_%s.xls",restn)), stringsAsFactors=FALSE, sep="\t", header=TRUE), read.csv(file.path(gsea.out, rest, sprintf("gsea_report_for_na_neg_%s.xls",restn)), stringsAsFactors=FALSE, sep="\t", header=TRUE))
+  		tt <- rbind(read.csv(file.path(gsea.out, rest, sprintf("gsea_report_for_na_pos_%s.xls",restn)), sep="\t", header=TRUE), read.csv(file.path(gsea.out, rest, sprintf("gsea_report_for_na_neg_%s.xls",restn)), sep="\t", header=TRUE))
   		rownames(tt) <- as.character(tt[ ,"NAME"])
       tt <- tt[ , !apply(tt, 2, function(x) { return(all(is.na(x))) }), drop=FALSE]
   		## rename results directory

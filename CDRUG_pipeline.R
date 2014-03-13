@@ -30,6 +30,9 @@ source(file.path("CDRUG_foo.R"))
 options(download.file.method="curl")
 ## change to curl, wget or internal depending on your system
 
+## prevent strings to be converted into factors
+options(stringsAsFactors=FALSE)
+
 ## set random seed to ensuer reproducibility of the resuls
 set.seed(54321)
 
@@ -39,6 +42,11 @@ nbcore <- 8
 availcore <- parallel::detectCores()
 if (is.null(nbcore) || nbcore > availcore) { nbcore <- availcore }
 options("mc.cores"=nbcore)
+
+## use COMIC annotations for cell lines (computationally intensive)?
+cosmic.annot <- FALSE
+## COSMIC version
+cosmic.version <-= "v68"
 
 ## list of characters to be removed from row and column names
 badchars <- "[\xb5]|[\n]|[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[\\]|[.]|[_]|[ ]"

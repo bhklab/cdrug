@@ -29,7 +29,7 @@ if(!file.exists(myfn)) {
   i <- 1
   while(i <= 8) {
     ## assuming there are only 9 zip archives (need to check if the update version has more)
-   dwl.status <- download.file(url=sprintf("%s/cel/cel_0%i.zip", ftpdir, i), destfile=file.path(rawpath, "dwl", sprintf("cel_0%i.zip", i)))
+   dwl.status <- download.file(url=sprintf("%s/cel/cel_0%i.zip", ftpdir, i), destfile=file.path(rawpath, "dwl", sprintf("cel_0%i.zip", i)), quiet=TRUE)
    if(dwl.status != 0) {
      message("\t-> download failed, let's try again ...")
      file.remove(file.path(rawpath, "dwl", sprintf("cel_0%i.zip", i)))
@@ -56,13 +56,13 @@ if(!file.exists(myfn)) {
 
 ## download sample information
 message("Download sample information")
-dwl.status <- download.file(url=sprintf("%s/GSK_RNA.sdrf", ftpdir), destfile=file.path(rawpath, "dwl", "GSK_RNA.sdrf"))
+dwl.status <- download.file(url=sprintf("%s/GSK_RNA.sdrf", ftpdir), destfile=file.path(rawpath, "dwl", "GSK_RNA.sdrf"), quiet=TRUE)
 if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
 file.copy(from=file.path(rawpath, "dwl", "GSK_RNA.sdrf"), to=file.path(rawpath, "GSK_RNA.sdrf"))
   
 ## download drug sensitivity (release 2)
 message("Download drug sensitivity measurements")
-dwl.status <- download.file(url="http://cancerres.aacrjournals.org/content/suppl/2010/04/19/0008-5472.CAN-09-3788.DC1/stab_2.xls", destfile=file.path(rawpath, "dwl", "stab_2.xls"))
+dwl.status <- download.file(url="http://cancerres.aacrjournals.org/content/suppl/2010/04/19/0008-5472.CAN-09-3788.DC1/stab_2.xls", destfile=file.path(rawpath, "dwl", "stab_2.xls"), quiet=TRUE)
 if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
 file.copy(from=file.path(rawpath, "dwl", "stab_2.xls"), to=file.path(rawpath, "gsk_drug_sensitivity.xls"))
 
@@ -115,14 +115,14 @@ if(!file.exists(myfn)) {
 
   ## info about each experiment
   message("Read sample information")
-  sampleinfo <- read.csv(file.path(rawpath, "GSK_RNA.sdrf"), sep="\t", stringsAsFactors=FALSE, comment.char="#")
+  sampleinfo <- read.csv(file.path(rawpath, "GSK_RNA.sdrf"), sep="\t", comment.char="#")
   sampleinfo[sampleinfo == "" | sampleinfo == " "] <- NA
   ## curate cell line names
   rownames(sampleinfo) <- gsub(" - Replicate ", "_rep", sampleinfo[ , "Source.Name"])
   sampleinfo <- data.frame("samplename"=rownames(sampleinfo), "cellid"=sampleinfo[ , "Characteristics.Cell.Line.Name."], "filename"=sprintf("%s.gz", sampleinfo[ , "Array.Data.File"]), "tissue.type"=tolower(gsub("_$", "", gsub(badchars, "_", sampleinfo[ , "Characteristics.OrganismPart."]))), sampleinfo)
   
   ## read drug phenotypes
-  drugpheno <- read.xls(xls=file.path(rawpath, "gsk_drug_sensitivity.xls"), sheet=1, stringsAsFactors=FALSE)
+  drugpheno <- read.xls(xls=file.path(rawpath, "gsk_drug_sensitivity.xls"), sheet=1)
   drugpheno[drugpheno == ""] <- NA
   cn <- gsub(badchars, ".", drugpheno[6, ])
   cn <- gsub("CL.ID", "CL_ID", cn)

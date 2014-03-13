@@ -96,18 +96,18 @@ drug.map2 <- drug.map[complete.cases(drug.map[ , c("CCLE", "CGP")]), c("CCLE", "
 
 ## cell line annotations
 ## CGP cell line collection
-# celline.cgp <- read.csv(file=file.path(saveres, "cell_line_collection_cgp.csv"), stringsAsFactors=FALSE)
+# celline.cgp <- read.csv(file=file.path(saveres, "cell_line_collection_cgp.csv"))
 # rownames(celline.cgp) <- as.character(celline.cgp[ , "cellid"])
 # celline.cgp[ , "cellid"] <- as.character(celline.cgp[ , "cellid"])
 if(any(!is.element(rownames(data.cgp), rownames(celline.cgp)))) { stop("some cell lines in CGP are not part of CGP cell line collection") }
 ## CCLE cell line collection
-# celline.ccle <- read.csv(file=file.path(saveres, "cell_line_collection_ccle.csv"), stringsAsFactors=FALSE)
+# celline.ccle <- read.csv(file=file.path(saveres, "cell_line_collection_ccle.csv"))
 # rownames(celline.ccle) <- as.character(celline.ccle[ , "cellid"])
 # celline.ccle[ , "cellid"] <- as.character(celline.ccle[ , "cellid"])
 if(any(!is.element(rownames(data.ccle), rownames(celline.ccle)))) { stop("some cell lines in CCLE are not part of CCLE cell line collection") }
 
 ## read manual matching for cell lines in CCLE and CGP
-match.ccle.cgp <- read.csv(file=file.path("matching_cell_line_CCLE_CGP.csv"), stringsAsFactors=FALSE)
+match.ccle.cgp <- read.csv(file=file.path("matching_cell_line_CCLE_CGP.csv"))
 
 ## use CGP cell lines as reference 
 ## update ccle cell line collection
@@ -179,7 +179,7 @@ iix0 <- which(is.element(as.character(match.ccle.cgp[ , "CCLE.cell.line"]), nn))
 # match2 <- cbind(match2, "CCLE"=sapply(apply(rr, 1, which.max), function(x, y) { if(length(x) > 0) { return(y[x]) } else { return(NA)} }, y=rownames(data.ccle)))
 # write.csv(cbind(match1, "", match2), "temp.csv", row.names=FALSE)
 ## read the (manually curated) matching file
-mm <- read.csv("matching_cell_line_GSK_CCLE_CGP.csv", stringsAsFactors=FALSE)
+mm <- read.csv("matching_cell_line_GSK_CCLE_CGP.csv")
 mm[mm == ""] <- NA
 rownames(mm) <- mm[ , 1]
 nnn <- nnn0 <- rownames(sampleinfo.gsk)
@@ -212,7 +212,7 @@ rownames(drugconc.gsk) <- paste(as.character(drugconc.gsk[ , "cellid"]), as.char
 # nn[names(match1), "CGP"] <- match1
 # nn[names(match2), "CCLE"] <- match2
 # write.csv(nn, row.names=FALSE, file="temp2.csv")
-mm <- read.csv("matching_tissue_type_GSK_CCLE_CGP.csv", stringsAsFactors=FALSE)
+mm <- read.csv("matching_tissue_type_GSK_CCLE_CGP.csv")
 rownames(mm) <- mm[ , "GSK"]
 tissue <- sampleinfo.gsk[ , "tissue.type"]
 levels(tissue) <- mm[levels(tissue), "CGP"]
@@ -248,7 +248,7 @@ iix <- apply(celline.collection[ , c("CGP.tissue.type", "CCLE.tissue.type")], 1,
 tt <- celline.collection[ , "CGP.tissue.type"]
 names(tt) <- rownames(celline.collection)
 ## read manual curation of tissue types for cell lines with missing tissue type in CGP and CCLE
-match.tissue.ccle.cgp <- read.csv(file=file.path("matching_tissue_type_CCLE_CGP.csv"), stringsAsFactors=FALSE)
+match.tissue.ccle.cgp <- read.csv(file=file.path("matching_tissue_type_CCLE_CGP.csv"))
 tt[as.character(match.tissue.ccle.cgp[ , "cellid"])] <- as.character(match.tissue.ccle.cgp[ , "new.tissue.type"])
 ## use CCLE tissue type for missing entries
 tt[is.na(tt)] <- celline.collection[is.na(tt), "CCLE.tissue.type"]

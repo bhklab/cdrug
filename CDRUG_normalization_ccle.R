@@ -24,7 +24,7 @@ if(!file.exists(myfn)) {
   dir.create(file.path(rawpath, "dwl"), showWarnings=FALSE)
   
   ## download and compress CEL files
-  dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_21/CCLE_Expression.Arrays_2013-03-18.tar.gz?downloadff=true&fileId=9619", destfile=file.path(rawpath, "dwl", "CCLE_Expression.Arrays_2013-03-18.tar.gz"))
+  dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_21/CCLE_Expression.Arrays_2013-03-18.tar.gz?downloadff=true&fileId=9619", destfile=file.path(rawpath, "dwl", "CCLE_Expression.Arrays_2013-03-18.tar.gz"), quiet=TRUE)
   if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
   archivn <- "CCLE_Expression.Arrays_2013-03-18"
   ## untar
@@ -48,36 +48,36 @@ if(!file.exists(myfn)) {
 
 ## cell line annotations
 message("Download cell line annotation")
-dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_22/CCLE_sample_info_file_2012-10-18.txt?downloadff=true&fileId=6801", destfile=file.path(rawpath, "dwl", "CCLE_sample_info_file_2012-10-18.txt"))
+dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_22/CCLE_sample_info_file_2012-10-18.txt?downloadff=true&fileId=6801", destfile=file.path(rawpath, "dwl", "CCLE_sample_info_file_2012-10-18.txt"), quiet=TRUE)
 if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
 file.copy(from=file.path(rawpath, "dwl", "CCLE_sample_info_file_2012-10-18.txt"), to=file.path(rawpath, "ccle_sample_info_file.txt"))
   
  ## drug info
 message("Download drug information")
-dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_27/CCLE_NP24.2009_profiling_2012.02.20.csv?downloadff=true&fileId=3422", destfile=file.path(rawpath, "dwl", "CCLE_NP24.2009_profiling_2012.02.20.csv"))
+dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_27/CCLE_NP24.2009_profiling_2012.02.20.csv?downloadff=true&fileId=3422", destfile=file.path(rawpath, "dwl", "CCLE_NP24.2009_profiling_2012.02.20.csv"), quiet=TRUE)
 if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
 file.copy(from=file.path(rawpath, "dwl", "CCLE_NP24.2009_profiling_2012.02.20.csv"), to=file.path(rawpath, "ccle_drug_info_file.csv"))
   
  ## drug pheno
 message("Download drug sensitivity measurements")
 ## drug sensitivity data from the addendum in Nature
-dwl.status <- download.file(url="http://www.nature.com/nature/journal/v492/n7428/extref/nature11735-s2.xls", destfile=file.path(rawpath, "dwl", "nature11735-s2.xls"))
+dwl.status <- download.file(url="http://www.nature.com/nature/journal/v492/n7428/extref/nature11735-s2.xls", destfile=file.path(rawpath, "dwl", "nature11735-s2.xls"), quiet=TRUE)
 if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
 file.copy(from=file.path(rawpath, "dwl", "nature11735-s2.xls"), to=file.path(rawpath, "ccle_drug_pheno_file.xls"))
 ## drug sensitivity data from the CCLE website
-# dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_27/CCLE_NP24.2009_Drug_data_2012.02.20.csv?downloadff=true&fileId=2114", destfile=file.path(rawpath, "dwl", "CCLE_NP24.2009_Drug_data_2012.02.20.csv"))
+# dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_27/CCLE_NP24.2009_Drug_data_2012.02.20.csv?downloadff=true&fileId=2114", destfile=file.path(rawpath, "dwl", "CCLE_NP24.2009_Drug_data_2012.02.20.csv"), quiet=TRUE)
 # if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
 # file.copy(from=file.path(rawpath, "dwl", "CCLE_NP24.2009_Drug_data_2012.02.20.csv"), to=file.path(rawpath, "ccle_drug_pheno_file.csv"))
 
 ## mutations
 message("Download mutation data")
 ## hybrid capture
-dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_26/CCLE_hybrid_capture1650_hg19_NoCommonSNPs_NoNeutralVariants_CDS_2012.05.07.maf.gz?downloadff=true&fileId=6873", destfile=file.path(rawpath, "dwl", "CCLE_hybrid_capture1650_hg19_NoCommonSNPs_NoNeutralVariants_CDS_2012.05.07.maf.gz"))
+dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_26/CCLE_hybrid_capture1650_hg19_NoCommonSNPs_NoNeutralVariants_CDS_2012.05.07.maf.gz?downloadff=true&fileId=6873", destfile=file.path(rawpath, "dwl", "CCLE_hybrid_capture1650_hg19_NoCommonSNPs_NoNeutralVariants_CDS_2012.05.07.maf.gz"), quiet=TRUE)
 if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
 gunzip(filename=file.path(rawpath, "dwl", "CCLE_hybrid_capture1650_hg19_NoCommonSNPs_NoNeutralVariants_CDS_2012.05.07.maf.gz"), overwrite=TRUE)
 file.copy(from=file.path(rawpath, "dwl", "CCLE_hybrid_capture1650_hg19_NoCommonSNPs_NoNeutralVariants_CDS_2012.05.07.maf"), to=file.path(rawpath, "ccle_mutations_hybrid.maf"))
 ## oncomap3
-dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_23/CCLE_Oncomap3_2012-04-09.maf?downloadff=true&fileId=3000", destfile=file.path(rawpath, "dwl", "CCLE_Oncomap3_2012-04-09.maf"))
+dwl.status <- download.file(url="http://www.broadinstitute.org/ccle/downloadFile/DefaultSystemRoot/exp_10/ds_23/CCLE_Oncomap3_2012-04-09.maf?downloadff=true&fileId=3000", destfile=file.path(rawpath, "dwl", "CCLE_Oncomap3_2012-04-09.maf"), quiet=TRUE)
 if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
 file.copy(from=file.path(rawpath, "dwl", "CCLE_Oncomap3_2012-04-09.maf"), to=file.path(rawpath, "ccle_mutations_oncomap.maf"))
 
@@ -126,7 +126,7 @@ if(!file.exists(myfn)) {
 
   ## drug information
   message("Read drug information")
-  druginfo <- read.csv(file.path(rawpath, "ccle_drug_info_file.csv"), stringsAsFactors=FALSE)
+  druginfo <- read.csv(file.path(rawpath, "ccle_drug_info_file.csv"))
   druginfo[druginfo == "" | druginfo == " "] <- NA
   ## manual drug name curation
   druginfo[druginfo[ ,"Compound..code.or.generic.name."] == "Panobinostat\xa0\xa0","Compound..code.or.generic.name."] <- "Panobinostat"
@@ -140,7 +140,7 @@ if(!file.exists(myfn)) {
   ## drug sensitivity data from the addendum in Nature
   myfn2 <- file.path(saveres, "ccle_drug_pheno_file.RData")
   if(!file.exists(myfn2)) {
-    drugpheno <- gdata::read.xls(xls=file.path(rawpath, "ccle_drug_pheno_file.xls"), sheet=12, stringsAsFactors=FALSE)
+    drugpheno <- gdata::read.xls(xls=file.path(rawpath, "ccle_drug_pheno_file.xls"), sheet=12)
     drugpheno[drugpheno == "" | drugpheno == " "] <- NA
     save(list="drugpheno", compress=TRUE, file=myfn2)
   } else { load(myfn2) }
@@ -153,7 +153,7 @@ if(!file.exists(myfn)) {
   drugpheno <- setcolclass.df(df=drugpheno, colclass=rep("character", ncol(drugpheno)), factor.levels=sapply(drugpheno, levels))
   drugpheno <- setcolclass.df(df=drugpheno, colclass=c(rep("character", 8), rep("numeric", 4), "character", "numeric", "numeric"))
   ## drug sensitivity data from the CCLE website
-  # drugpheno <- read.csv(file.path(rawpath, "ccle_drug_pheno_file.csv"), stringsAsFactors=FALSE)
+  # drugpheno <- read.csv(file.path(rawpath, "ccle_drug_pheno_file.csv"))
   # colnames(drugpheno) <- gsub(pattern=badchars, replacement="_", x=colnames(drugpheno))
   # drugpheno[drugpheno == "" | drugpheno == " "] <- NA
   ## manual curation of drug names
@@ -269,7 +269,7 @@ if(!file.exists(myfn)) {
   
   ## info about each experiment
   message("Read sample information")
-  sampleinfo <- read.csv(file.path(rawpath, "ccle_sample_info_file.txt"), sep="\t", stringsAsFactors=FALSE)
+  sampleinfo <- read.csv(file.path(rawpath, "ccle_sample_info_file.txt"), sep="\t")
   sampleinfo[sampleinfo == "" | sampleinfo == " "] <- NA
   sampleinfo <- data.frame("cellid"=as.character(sampleinfo[ ,"Cell.line.primary.name"]), sampleinfo)
   ## remove duplicated cell line hybridization
@@ -283,7 +283,7 @@ if(!file.exists(myfn)) {
   if(!file.exists(myfn2)) {
     message("Read (missense) mutation data")
     ## from hybrid capture
-    mut <- read.csv(file.path(rawpath, "ccle_mutations_hybrid.maf"), stringsAsFactors=FALSE, sep="\t")
+    mut <- read.csv(file.path(rawpath, "ccle_mutations_hybrid.maf"), sep="\t")
     mut <- mut[ , c("Hugo_Symbol", "Tumor_Sample_Barcode", "Protein_Change"), drop=FALSE]
     mut[!is.na(mut) & mut == ""] <- NA
     mut[is.na(mut[ , "Protein_Change"]) | mut[ , "Protein_Change"] == "", "Protein_Change"] <- "wt"
@@ -292,7 +292,7 @@ if(!file.exists(myfn)) {
     myx <- !duplicated(paste(mut[ , c("Tumor_Sample_Barcode")], mut[ , c("Hugo_Symbol")], mut[ , c("Protein_Change")], sep="///"))
     mut <- mut[myx, , drop=FALSE]
     ## from oncomap
-    mut2 <- read.csv(file.path(rawpath, "ccle_mutations_oncomap.maf"), stringsAsFactors=FALSE, sep="\t")
+    mut2 <- read.csv(file.path(rawpath, "ccle_mutations_oncomap.maf"), sep="\t")
     mut2 <- mut2[ , c("Hugo_Symbol", "Tumor_Sample_Barcode", "Protein_Change"), drop=FALSE]
     mut2[!is.na(mut2) & mut2 == ""] <- NA
     # mut2[is.na(mut2[ , "Protein_Change"]) | mut2[ , "Protein_Change"] == "", "Protein_Change"] <- "wt"
