@@ -13,7 +13,7 @@ Citation
 
 To cite this work in publication, use
 
-Inconsistency in large pharmacogenomic studies. Benjamin Haibe-Kains, Nehme El-Hachem, Nicolai Juul Birkbak, Andrew C. Jin, Andrew H. Beck, Hugo J.W.L. Aerts, John Quackenbush. Submitted, 2013.
+Inconsistency in large pharmacogenomic studies. Haibe-Kains B, El-Hachem N, Birkbak NJ, Jin AC, Beck AH, Aerts HJ, Quackenbush J. Nature. 2013 Dec 19;504(7480):389-93. doi: 10.1038/nature12831. Epub 2013 Nov 27. PMID: 24284626
 
 
 Full Reproducibility of the Analysis Results
@@ -115,4 +115,4 @@ source("CDRUG pipeline.R")
 
 Key messages will be displayed to monitor the progress of the analysis.
 
-The analysis pipeline was developed so that  all intermediate analysis results are  saved in the directories data and  saveres. Therefore, in case of interruption,  the pipeline will restart where  it stopped.
+The analysis pipeline was developed so that  all intermediate analysis results are  saved in the directories data and  saveres. Therefore, in case of interruption, the user can rerun the pipeline which will restart where it stopped.
