@@ -65,7 +65,7 @@ genedrugm <- "lm"
 
 ## GSEA parameters
 ## path to the GSEA java executable
-gsea.exec <- file.path("gsea2-2.0.13.jar")
+gsea.exec <- file.path("gsea2-2.0.14.jar")
 ## number of random geneset permutations
 gsea.nperm <- 1000
 ## file containing the geneset definitions
