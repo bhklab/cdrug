@@ -47,7 +47,7 @@ Run the following commands in a R session to install all the required  packages:
 
 source("http://bioconductor.org/biocLite.R")
 
-biocLite(c("AnnotationDbi", "affy", "affyio", "hthgu133acdf", "hthgu133afrmavecs", "hgu133plus2cdf", "hgu133plus2frmavecs", "org.Hs.eg.db", "genefu", "frma", "Hmisc", "vcd", "epibasix", "amap", "gdata", "WriteXLS", "xtable", "plotrix", "R.utils", "DBI", "GSA", "gplots"))
+biocLite(c("AnnotationDbi", "affy", "affyio", "hthgu133acdf", "hthgu133afrmavecs", "hgu133plus2cdf", "hgu133plus2frmavecs", "org.Hs.eg.db", "genefu", "frma", "Hmisc", "vcd", "epibasix", "amap", "gdata", "impute", "WriteXLS", "xtable", "plotrix", "R.utils", "DBI", "GSA", "gplots"))
 
 Note that you may need to install Perl (http://www.perl.org/get.html)  and  its module  Text::CSV  XS for the WriteXLS package to write xls file; once  Perl is installed  in your system, use  the  following command to install the Text::CSV  XS module  through  CPAN (http://www.cpan.org/modules/INSTALL.html):
 

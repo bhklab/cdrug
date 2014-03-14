@@ -260,7 +260,7 @@ if(!file.exists(myfn)) {
   cor.all[iix[ , c(2, 1)]] <- unlist(mcres)
   save(list="cor.all", compress=TRUE, file=myfn)
 } else { load(myfn) }
-tt <- imputation::kNNImpute(x=cor.all, k=10, verbose=FALSE)$x
+tt <- impute::impute.knn(data=cor.all, k=10, rowmax=0.99, colmax=0.99)$data
 oo <- amap::hcluster(tt, link="complete")$order
 pdf(file.path(saveres, sprintf("mut_cellines_boxplot_ccle_cgp_paper.pdf", topvar)), height=7, width=7)
 par(xaxt="n", yaxt="n")
