@@ -94,7 +94,6 @@ if(!file.exists(myfn)) {
   tt <- cosmic.celline
   iix.rm <- NULL
   for(i in 1:length(dupln)) {
-    print(i)
     duplix <- cosmic.celline[ ,"Sample.name"] == dupln[i]
     iix <- sort((which(duplix)), decreasing=FALSE)[1]
     iix.rm <- c(iix.rm, setdiff(which(duplix), iix))
