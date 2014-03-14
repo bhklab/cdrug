@@ -193,7 +193,6 @@ for(i in 1:ncol(ic50f.ccle)) {
   if(nnn >= 3) {
     cc <- cor.test(ic50f.ccle[, i], ic50f.cgp[, i], method="spearman", use="complete.obs", alternative="greater")
     cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-    ccall <- rbind(ccall, c("rho"=cc$estimate, "lower"=cci[1], "upper"=cci[2], "p"=cc$p.value, "n"=nnn))
     correlations[["ic50"]][i, "drug.sensitivity.filt"] <- cc$estimate
     ## correlation statistics
     cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
