@@ -124,15 +124,21 @@ if(!file.exists(myfn)) {
   dupln <- unique(gdsc.celline[ , "CELL_LINE_NAME"][duplicated(gdsc.celline[ , "CELL_LINE_NAME"])])
   gdsc.celline <- gdsc.celline[!duplicated(gdsc.celline[ , "CELL_LINE_NAME"]), , drop=FALSE]
   rownames(gdsc.celline) <- gdsc.celline[ , "CELL_LINE_NAME"]
-  ## merge GDSC and COSMIC annotations through COSMIC_ID
-  iix <- which(!is.na(gdsc.celline[ , "COSMIC_ID"]) & !is.element(gdsc.celline[ , "COSMIC_ID"], cosmic.celline[ , "ID_sample"]))
-  tt <- data.frame(matrix(NA, nrow=nrow(cosmic.celline) + length(iix), ncol=ncol(cosmic.celline), dimnames=list(c(rownames(cosmic.celline), rownames(gdsc.celline)[iix]), colnames(cosmic.celline))))
-  tt[rownames(cosmic.celline), ] <- cosmic.celline
-  tt[rownames(gdsc.celline)[iix], "Sample.name"] <- gdsc.celline[iix, "CELL_LINE_NAME"]
-  tt[rownames(gdsc.celline)[iix], "ID_sample"] <- gdsc.celline[iix, "COSMIC_ID"]
-  celline.cgp <- tt
-  save(list=c("celline.cgp"), compress=TRUE, file=myfn)
+  save(list=c("gdsc.celline"), compress=TRUE, file=myfn)
 } else { load(myfn) }
+
+## merge GDSC and COSMIC annotations through COSMIC_ID
+message("Merge COSMIC and GDSC annotations for cell liness")
+## comflict between COSMIC and GDSC: NTERA-2_cl_D1 -> NTERA-S-cl-D1
+myx <- which(rownames(cosmic.celline) == "NTERA-2_cl_D1")
+rownames(cosmic.celline)[myx] <- "NTERA-S-cl-D1"
+cosmic.celline[myx, "Sample.name"] <- "NTERA-S-cl-D1"
+iix <- which(complete.cases(gdsc.celline[ , c("CELL_LINE_NAME", "COSMIC_ID")]) & !is.element(gdsc.celline[ , "COSMIC_ID"], cosmic.celline[ , "ID_sample"]) & !is.element(gdsc.celline[ , "CELL_LINE_NAME"], cosmic.celline[ , "Sample.name"]))
+tt <- data.frame(matrix(NA, nrow=nrow(cosmic.celline) + length(iix), ncol=ncol(cosmic.celline), dimnames=list(c(rownames(cosmic.celline), rownames(gdsc.celline)[iix]), colnames(cosmic.celline))))
+tt[rownames(cosmic.celline), ] <- cosmic.celline
+tt[rownames(gdsc.celline)[iix], "Sample.name"] <- gdsc.celline[iix, "CELL_LINE_NAME"]
+tt[rownames(gdsc.celline)[iix], "ID_sample"] <- gdsc.celline[iix, "COSMIC_ID"]
+celline.cgp <- tt
 
 ## download drug information
 message("Download drug information")
