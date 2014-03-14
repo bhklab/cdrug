@@ -43,8 +43,6 @@ availcore <- parallel::detectCores()
 if (is.null(nbcore) || nbcore > availcore) { nbcore <- availcore }
 options("mc.cores"=nbcore)
 
-## use COMIC annotations for cell lines (computationally intensive)?
-cosmic.annot <- FALSE
 ## COSMIC version
 cosmic.version <- "v68"
 

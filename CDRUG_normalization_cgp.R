@@ -76,7 +76,8 @@ file.copy(from=file.path(rawpath, "dwl", "gdsc_compounds_conc_w2.csv"), to=file.
   
 ## download cell line annotations and COSMIC IDs
 ## annotations from COSMIC cell line project
-if (cosmic.annot) {
+myfn <- file.path(saveres, "cosmic_annotations.RData")
+if(!file.exists(myfn)) {
   message("Download COSMIC annotations for cell lines")
   dwl.status <- download.file(url=sprintf("ftp://ftp.sanger.ac.uk//pub/CGP/cell_lines_project/data_export/CosmicCellLineProject_%s.tsv.gz", cosmic.version), destfile=file.path(rawpath, "dwl", sprintf("CosmicCellLineProject_%s.tsv.gz", cosmic.version)), quiet=TRUE)
   if(dwl.status != 0) { stop("Download failed, please rerun the pipeline! It may be that there is a new version of the file CosmicCellLineProject, please look at ftp://ftp.sanger.ac.uk/pub/CGP/cosmic/data_export/ and update the script accordingly ...") }
@@ -85,15 +86,15 @@ if (cosmic.annot) {
   file.copy(from=file.path(rawpath, "dwl", sprintf("CosmicCellLineProject_%s.tsv", cosmic.version)), to=file.path(rawpath, "cosmic_celline_collection.csv"))
   message("Process COSMIC annotations")
   cosmic.celline <- read.csv(file=file.path(rawpath, "cosmic_celline_collection.csv"), sep="\t")
-  cosmic.celline[cosmic.celline == "" | cosmic.celline == " " | cosmic.celline == "  "] <- NA
   # cosmic.celline <- cosmic.celline[- c(grep("row selected", cosmic.celline[ ,1]), grep("rows selected", cosmic.celline[ ,1])), , drop=FALSE]
-  ## remove cell line with no name
-  cosmic.celline <- cosmic.celline[!is.na(cosmic.celline[ , "Sample.name"]), , drop=FALSE]
+  cosmic.celline <- cosmic.celline[complete.cases(cosmic.celline[ , c("Sample.name", "Sample.source")]) & cosmic.celline[ , "Sample.source"] == "cell-line", , drop=FALSE]
+  cosmic.celline[cosmic.celline == "" | cosmic.celline == " " | cosmic.celline == "  "] <- NA
   ## merge the gene targets
   dupln <- unique(cosmic.celline[ , "Sample.name"][duplicated(cosmic.celline[ , "Sample.name"])])
   tt <- cosmic.celline
   iix.rm <- NULL
   for(i in 1:length(dupln)) {
+    print(i)
     duplix <- cosmic.celline[ ,"Sample.name"] == dupln[i]
     iix <- sort((which(duplix)), decreasing=FALSE)[1]
     iix.rm <- c(iix.rm, setdiff(which(duplix), iix))
@@ -108,31 +109,32 @@ if (cosmic.annot) {
   tt <- tt[-iix.rm, , drop=FALSE]
   rownames(tt) <- tt[ , "Sample.name"]
   cosmic.celline <- tt
-} else {
-  
-}
+  save(list=c("cosmic.celline"), compress=TRUE, file=myfn)
+} else { load(myfn) }
+
 ## annotations from GDSC (Genomics of Drug Sensitivity in Cancer)
-message("Download GDSC annotations for cell liness")
-dwl.status <- download.file(url="ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/current_release/gdsc_cell_lines_w2.csv", destfile=file.path(rawpath, "dwl", "gdsc_cell_lines_w2.csv"), quiet=TRUE)
-file.copy(from=file.path(rawpath, "dwl", "gdsc_cell_lines_w2.csv"), to=file.path(rawpath, "cgp_celline_collection.csv"))
-if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
-gdsc.celline <- read.csv(file=file.path(rawpath, "cgp_celline_collection.csv"))
-gdsc.celline[gdsc.celline == "" | gdsc.celline == " " | gdsc.celline == "  "] <- NA
-gdsc.celline <- gdsc.celline[!is.na(gdsc.celline[ , "CELL_LINE_NAME"]), , drop=FALSE]
-dupln <- unique(gdsc.celline[ , "CELL_LINE_NAME"][duplicated(gdsc.celline[ , "CELL_LINE_NAME"])])
-gdsc.celline <- gdsc.celline[!duplicated(gdsc.celline[ , "CELL_LINE_NAME"]), , drop=FALSE]
-rownames(gdsc.celline) <- gdsc.celline[ , "CELL_LINE_NAME"]
-## merge GDSC and COSMIC annotations through COSMIC_ID
-if (cosmic.annot) {
+myfn <- file.path(saveres, "gdsc_annotations.RData")
+if(!file.exists(myfn)) {
+  message("Download GDSC annotations for cell liness")
+  dwl.status <- download.file(url="ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/current_release/gdsc_cell_lines_w2.csv", destfile=file.path(rawpath, "dwl", "gdsc_cell_lines_w2.csv"), quiet=TRUE)
+  file.copy(from=file.path(rawpath, "dwl", "gdsc_cell_lines_w2.csv"), to=file.path(rawpath, "cgp_celline_collection.csv"))
+  if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
+  gdsc.celline <- read.csv(file=file.path(rawpath, "cgp_celline_collection.csv"))
+  gdsc.celline[gdsc.celline == "" | gdsc.celline == " " | gdsc.celline == "  "] <- NA
+  gdsc.celline <- gdsc.celline[!is.na(gdsc.celline[ , "CELL_LINE_NAME"]), , drop=FALSE]
+  dupln <- unique(gdsc.celline[ , "CELL_LINE_NAME"][duplicated(gdsc.celline[ , "CELL_LINE_NAME"])])
+  gdsc.celline <- gdsc.celline[!duplicated(gdsc.celline[ , "CELL_LINE_NAME"]), , drop=FALSE]
+  rownames(gdsc.celline) <- gdsc.celline[ , "CELL_LINE_NAME"]
+  ## merge GDSC and COSMIC annotations through COSMIC_ID
   iix <- which(!is.na(gdsc.celline[ , "COSMIC_ID"]) & !is.element(gdsc.celline[ , "COSMIC_ID"], cosmic.celline[ , "ID_sample"]))
   tt <- data.frame(matrix(NA, nrow=nrow(cosmic.celline) + length(iix), ncol=ncol(cosmic.celline), dimnames=list(c(rownames(cosmic.celline), rownames(gdsc.celline)[iix]), colnames(cosmic.celline))))
   tt[rownames(cosmic.celline), ] <- cosmic.celline
   tt[rownames(gdsc.celline)[iix], "Sample.name"] <- gdsc.celline[iix, "CELL_LINE_NAME"]
   tt[rownames(gdsc.celline)[iix], "ID_sample"] <- gdsc.celline[iix, "COSMIC_ID"]
   celline.cgp <- tt
-} else {
-  celline.cgp <- data.frame(gdsc.celline, "Sample.name"=as.character(gdsc.celline[ , "CELL_LINE_NAME"]), "ID_sample"=as.character(gdsc.celline[ , "COSMIC_ID"]))
-}
+  save(list=c("celline.cgp"), compress=TRUE, file=myfn)
+} else { load(myfn) }
+
 ## download drug information
 message("Download drug information")
 dwl.status <- download.file(url="http://www.nature.com/nature/journal/v483/n7391/extref/nature11005-s2.zip", destfile=file.path(rawpath, "dwl", "nature11005-s2.zip"), quiet=TRUE)
