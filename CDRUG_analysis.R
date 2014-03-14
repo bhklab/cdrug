@@ -185,6 +185,22 @@ tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
 message("Are correlations between IC50s in some tissue types significantly higher than in all tissues combined?")
 print(tt)
 
+## filtered IC50
+for(i in 1:ncol(ic50f.ccle)) {
+  xxlim <- round(range(ic50f.cgp[, i], na.rm=TRUE) * 10) / 10
+  yylim <- round(range(ic50f.ccle[, i], na.rm=TRUE) * 10) / 10
+  nnn <- sum(complete.cases(ic50f.ccle[, i], ic50f.cgp[, i]))
+  if(nnn >= 3) {
+    cc <- cor.test(ic50f.ccle[, i], ic50f.cgp[, i], method="spearman", use="complete.obs", alternative="greater")
+    cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+    ccall <- rbind(ccall, c("rho"=cc$estimate, "lower"=cci[1], "upper"=cci[2], "p"=cc$p.value, "n"=nnn))
+    correlations[["ic50"]][i, "drug.sensitivity.filt"] <- cc$estimate
+    ## correlation statistics
+    cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+    correlations.stats[["ic50.filt"]][i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
+  }
+}
+
 ## discretized IC50s (sensitivity calling)
 
 ## we used Cohen Kappa coefficient (k) (67), as implemented in the R package epibasix ; k ranges from 0 to 1, with 0 indicating no rela- tion and 1 indicating a perfect concordance. Typically qualitative descriptions are associated with intervals [k ≤ 0.20, slight agreement; 0.20 < k ≤ 0.40, fair agreement; 0.40 < k ≤ 0.60, moderate agreement, 0.60 < k ≤ 0.80, substantial agreement; and 0.80 < k ≤ 0.99, almost perfect agreement, as described in Weigelt et al. (22)].
@@ -451,7 +467,6 @@ pdf(file.path(saveres, "auc_sensitivity_calling_kappa_ccle_cgp.pdf"), width=7, h
 hist(mykap, main=sprintf("Sensitivity calling based on AUC\nKappa coefficients (CCLE vs CGP)", xlab="Kappa"))
 dev.off()
 
-
 ## save all correlations statistics
 savecor <- NULL
 for(i in 1:length(correlations.stats)) {
@@ -459,6 +474,7 @@ for(i in 1:length(correlations.stats)) {
   savecor <- c(savecor, list(data.frame(tt)))
 }
 names(savecor) <- names(correlations.stats)
+savecor <- savecor[sapply(savecor, ncol) > 0]
 WriteXLS::WriteXLS("savecor", ExcelFileName=file.path(saveres, "correlations_stats.xls"), row.names=TRUE)
 
 save(list=c("correlations", "correlations.stats"), compress=TRUE, file=file.path(saveres, "correlations_stats.RData"))
@@ -656,10 +672,6 @@ for(i in 1:ncol(ic50.ccle.t)) {
     cc <- cor.test(ic50.ccle.t[, i], ic50.cgp.t[, i], method="spearman", use="complete.obs", alternative="greater")
     cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
     ccall <- rbind(ccall, c("rho"=cc$estimate, "lower"=cci[1], "upper"=cci[2], "p"=cc$p.value, "n"=nnn))
-    correlations[["ic50"]][i, "drug.sensitivity.filt"] <- cc$estimate
-    ## correlation statistics
-    cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-    correlations.stats[["ic50.filt"]][i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
   } else {
     ccall <- rbind(ccall, c("rho"=NA, "lower"=NA, "upper"=NA, "p"=NA, "n"=nnn))
   }
