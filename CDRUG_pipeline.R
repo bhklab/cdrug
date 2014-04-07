@@ -46,6 +46,9 @@ options("mc.cores"=nbcore)
 ## COSMIC version
 cosmic.version <- "v68"
 
+## tissue type specific analyses
+tissue.specific <- FALSE
+
 ## list of characters to be removed from row and column names
 badchars <- "[\xb5]|[\n]|[,]|[;]|[:]|[-]|[+]|[*]|[%]|[$]|[#]|[{]|[}]|[[]|[]]|[|]|[\\^]|[/]|[\\]|[.]|[_]|[ ]"
 

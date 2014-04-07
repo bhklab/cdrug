@@ -94,96 +94,98 @@ for(i in 1:ncol(ic50.ccle)) {
 dev.off()
 
 ## IC50s per tissue types
-correlations.stats.ic50.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
-for(ii in 1:length(tissuen)) {
-  for(i in 1:ncol(ic50.ccle)) {
-    iix <- !is.na(tissue) & tissue == tissuen[ii]
-    nnn <- sum(complete.cases(ic50.ccle[iix, i], ic50.cgp[iix, i]))
-    if(nnn >= minsample) {
-      cc <- cor.test(ic50.ccle[iix, i], ic50.cgp[iix, i], method="spearman", use="complete.obs", alternative="greater")
-    } else {
-      cc <- list("estimate"=NA, "p.value"=NA)
+if (tissue.specific) {
+  correlations.stats.ic50.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
+  for(ii in 1:length(tissuen)) {
+    for(i in 1:ncol(ic50.ccle)) {
+      iix <- !is.na(tissue) & tissue == tissuen[ii]
+      nnn <- sum(complete.cases(ic50.ccle[iix, i], ic50.cgp[iix, i]))
+      if(nnn >= minsample) {
+        cc <- cor.test(ic50.ccle[iix, i], ic50.cgp[iix, i], method="spearman", use="complete.obs", alternative="greater")
+      } else {
+        cc <- list("estimate"=NA, "p.value"=NA)
+      }
+      ## correlation statistics
+      cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+      correlations.stats.ic50.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
     }
-    ## correlation statistics
-    cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-    correlations.stats.ic50.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
   }
-}
 
-## boxplot for paper
-pdf(file.path(saveres, sprintf("boxplot_ic50_ccle_cgp_tissue.pdf")), height=10, width=14)
-## correlations for each drug per tissue type
-tt <- correlations.stats.ic50.tissue[ , , "rho"]
-## remove the non significant p-values
-# tt[correlations.stats.ic50.tissue[ , , "p"] >= 0.05] <- NA
-ll <- c(list("all_tissues"=correlations.stats[["ic50"]][ , "rho"]), lapply(apply(tt, 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-pp <- NULL
-for(j in myx) { for(jj in ll[[j]]) { pp <- rbind(pp, c(j, jj)) } }
-ll[sapply(ll, length) < 3] <- NA
-par(las=2, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of drug sensitivity (IC50) across tissue types\nCCLE vs. CGP", border="black", ylim=c(-1, 1), col=c("lightgrey", coltissue))
-points(x=pp[ , 1], y=pp[ , 2], col=coltissue[pp[ , 1]], pch=20)
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.02), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+  ## boxplot for paper
+  pdf(file.path(saveres, sprintf("boxplot_ic50_ccle_cgp_tissue.pdf")), height=10, width=14)
+  ## correlations for each drug per tissue type
+  tt <- correlations.stats.ic50.tissue[ , , "rho"]
+  ## remove the non significant p-values
+  # tt[correlations.stats.ic50.tissue[ , , "p"] >= 0.05] <- NA
+  ll <- c(list("all_tissues"=correlations.stats[["ic50"]][ , "rho"]), lapply(apply(tt, 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  pp <- NULL
+  for(j in myx) { for(jj in ll[[j]]) { pp <- rbind(pp, c(j, jj)) } }
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=2, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of drug sensitivity (IC50) across tissue types\nCCLE vs. CGP", border="black", ylim=c(-1, 1), col=c("lightgrey", coltissue))
+  points(x=pp[ , 1], y=pp[ , 2], col=coltissue[pp[ , 1]], pch=20)
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.02), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## boxplot for paper
-pdf(file.path(saveres, sprintf("boxplot2_ic50_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
-## correlations for each drug per tissue type
-tt <- correlations.stats.ic50.tissue[ , , "rho"]
-## remove the non significant p-values
-# tt[correlations.stats.ic50.tissue[ , , "p"] >= 0.05] <- NA
-ll <- c(list("all_tissues"=correlations.stats[["ic50"]][ , "rho"]), lapply(apply(tt, 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-ll[sapply(ll, length) < 3] <- NA
-par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of drug sensitivity (IC50) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
-ccol <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
-xx <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=1:length(ll))
-points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+  ## boxplot for paper
+  pdf(file.path(saveres, sprintf("boxplot2_ic50_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
+  ## correlations for each drug per tissue type
+  tt <- correlations.stats.ic50.tissue[ , , "rho"]
+  ## remove the non significant p-values
+  # tt[correlations.stats.ic50.tissue[ , , "p"] >= 0.05] <- NA
+  ll <- c(list("all_tissues"=correlations.stats[["ic50"]][ , "rho"]), lapply(apply(tt, 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of drug sensitivity (IC50) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
+  ccol <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
+  xx <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=1:length(ll))
+  points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
-cor.diff.test <- NULL
-ll <- c(list("all_tissues"=correlations.stats[["ic50"]][ , "rho"]), lapply(apply(correlations.stats.ic50.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ddnn <- names(ll[[1]])
-for(i in 2:length(ll)) {
-  if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
-   wt <- list("estimate"=NA, "p.value"=NA) 
-  } else {
-    wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+  ## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
+  cor.diff.test <- NULL
+  ll <- c(list("all_tissues"=correlations.stats[["ic50"]][ , "rho"]), lapply(apply(correlations.stats.ic50.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ddnn <- names(ll[[1]])
+  for(i in 2:length(ll)) {
+    if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
+     wt <- list("estimate"=NA, "p.value"=NA) 
+    } else {
+      wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+    }
+    cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
   }
-  cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
+  dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
+  # cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
+  cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
+  myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
+  tt <- cor.diff.test[myx, , drop=FALSE]
+  tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
+  message("Are correlations between IC50s in some tissue types significantly higher than in all tissues combined?")
+  print(tt)
 }
-dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
-# cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
-cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
-myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
-tt <- cor.diff.test[myx, , drop=FALSE]
-tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
-message("Are correlations between IC50s in some tissue types significantly higher than in all tissues combined?")
-print(tt)
 
 ## filtered IC50
 for(i in 1:ncol(ic50f.ccle)) {
@@ -301,96 +303,98 @@ for(i in 1:ncol(auc.ccle)) {
 dev.off()
 
 ## AUCs per tissue types
-correlations.stats.auc.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
-for(ii in 1:length(tissuen)) {
-  for(i in 1:ncol(auc.ccle)) {
-    iix <- !is.na(tissue) & tissue == tissuen[ii]
-    nnn <- sum(complete.cases(auc.ccle[iix, i], auc.cgp[iix, i]))
-    if(nnn >= minsample) {
-      cc <- cor.test(auc.ccle[iix, i], auc.cgp[iix, i], method="spearman", use="complete.obs", alternative="greater")
-    } else {
-      cc <- list("estimate"=NA, "p.value"=NA)
+if (tissue.specific) {
+  correlations.stats.auc.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
+  for(ii in 1:length(tissuen)) {
+    for(i in 1:ncol(auc.ccle)) {
+      iix <- !is.na(tissue) & tissue == tissuen[ii]
+      nnn <- sum(complete.cases(auc.ccle[iix, i], auc.cgp[iix, i]))
+      if(nnn >= minsample) {
+        cc <- cor.test(auc.ccle[iix, i], auc.cgp[iix, i], method="spearman", use="complete.obs", alternative="greater")
+      } else {
+        cc <- list("estimate"=NA, "p.value"=NA)
+      }
+      ## correlation statistics
+      cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+      correlations.stats.auc.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
     }
-    ## correlation statistics
-    cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-    correlations.stats.auc.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
   }
-}
 
-## boxplot for auc
-pdf(file.path(saveres, sprintf("boxplot_auc_ccle_cgp_tissue.pdf")), height=10, width=14)
-## correlations for each drug per tissue type
-tt <- correlations.stats.auc.tissue[ , , "rho"]
-## remove the non significant p-values
-# tt[correlations.stats.auc.tissue[ , , "p"] >= 0.05] <- NA
-ll <- c(list("all_tissues"=correlations.stats[["auc"]][ , "rho"]), lapply(apply(tt, 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-pp <- NULL
-for(j in myx) { for(jj in ll[[j]]) { pp <- rbind(pp, c(j, jj)) } }
-ll[sapply(ll, length) < 3] <- NA
-par(las=2, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of drug sensitivity (AUC) across tissue types\nCCLE vs. CGP", border="black", ylim=c(-1, 1), col=c("lightgrey", coltissue))
-points(x=pp[ , 1], y=pp[ , 2], col=coltissue[pp[ , 1]], pch=20)
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.02), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+  ## boxplot for auc
+  pdf(file.path(saveres, sprintf("boxplot_auc_ccle_cgp_tissue.pdf")), height=10, width=14)
+  ## correlations for each drug per tissue type
+  tt <- correlations.stats.auc.tissue[ , , "rho"]
+  ## remove the non significant p-values
+  # tt[correlations.stats.auc.tissue[ , , "p"] >= 0.05] <- NA
+  ll <- c(list("all_tissues"=correlations.stats[["auc"]][ , "rho"]), lapply(apply(tt, 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  pp <- NULL
+  for(j in myx) { for(jj in ll[[j]]) { pp <- rbind(pp, c(j, jj)) } }
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=2, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of drug sensitivity (AUC) across tissue types\nCCLE vs. CGP", border="black", ylim=c(-1, 1), col=c("lightgrey", coltissue))
+  points(x=pp[ , 1], y=pp[ , 2], col=coltissue[pp[ , 1]], pch=20)
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.02), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## boxplot for paper
-pdf(file.path(saveres, sprintf("boxplot2_auc_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
-## correlations for each drug per tissue type
-tt <- correlations.stats.auc.tissue[ , , "rho"]
-## remove the non significant p-values
-# tt[correlations.stats.auc.tissue[ , , "p"] >= 0.05] <- NA
-ll <- c(list("all_tissues"=correlations.stats[["auc"]][ , "rho"]), lapply(apply(tt, 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-ll[sapply(ll, length) < 3] <- NA
-par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of drug sensitivity (AUC) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
-ccol <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
-xx <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=1:length(ll))
-points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+  ## boxplot for paper
+  pdf(file.path(saveres, sprintf("boxplot2_auc_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
+  ## correlations for each drug per tissue type
+  tt <- correlations.stats.auc.tissue[ , , "rho"]
+  ## remove the non significant p-values
+  # tt[correlations.stats.auc.tissue[ , , "p"] >= 0.05] <- NA
+  ll <- c(list("all_tissues"=correlations.stats[["auc"]][ , "rho"]), lapply(apply(tt, 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of drug sensitivity (AUC) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
+  ccol <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
+  xx <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=1:length(ll))
+  points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
-cor.diff.test <- NULL
-ll <- c(list("all_tissues"=correlations.stats[["auc"]][ , "rho"]), lapply(apply(correlations.stats.auc.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ddnn <- names(ll[[1]])
-for(i in 2:length(ll)) {
-  if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
-   wt <- list("estimate"=NA, "p.value"=NA) 
-  } else {
-    wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+  ## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
+  cor.diff.test <- NULL
+  ll <- c(list("all_tissues"=correlations.stats[["auc"]][ , "rho"]), lapply(apply(correlations.stats.auc.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ddnn <- names(ll[[1]])
+  for(i in 2:length(ll)) {
+    if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
+     wt <- list("estimate"=NA, "p.value"=NA) 
+    } else {
+      wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+    }
+    cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
   }
-  cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
+  dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
+  # cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
+  cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
+  myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
+  tt <- cor.diff.test[myx, , drop=FALSE]
+  tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
+  message("Are correlations between AUCs in some tissue types significantly higher than in all tissues combined?")
+  print(tt)
 }
-dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
-# cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
-cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
-myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
-tt <- cor.diff.test[myx, , drop=FALSE]
-tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
-message("Are correlations between AUCs in some tissue types significantly higher than in all tissues combined?")
-print(tt)
 
 ## discretized AUCs (sensitivity calling)
 
@@ -515,97 +519,99 @@ text(x=mp[1, ] + 1.55, y=rbind(cors.ic50$rho, cors.auc$rho)[1, ], pos=2, labels=
 text(x=mp[2, ] + 1.55, y=rbind(cors.ic50$rho, cors.auc$rho)[2, ], pos=2, labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5)
 dev.off()
 
-## barplot for paper
-pdf(file.path(saveres, "barplot_ic50_auc_tissue_cgp_ccle.pdf"), height=6, width=6)
-for(ii in 1:length(tissuen)) {
-  ncelline <- sum(tissue == tissuen[ii])
-  if(max(correlations.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample) {
-    ## IC50
-    xx <- correlations.stats.ic50.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.stats.ic50.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.stats.ic50.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.stats.ic50.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.stats.ic50.tissue)[[2]]
-    cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    ## AUC
-    xx <- correlations.stats.auc.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.stats.auc.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.stats.auc.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.stats.auc.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.stats.auc.tissue)[[2]]
-    cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
-    # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-    yylim <- c(0, 1)
-    mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Drug sensitivity measures\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
-    # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-    # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-    axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-    text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-    text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-  }
-}
-dev.off()
-
-## multiple barplots per page
-count <- 0
-nf <- 6
-for(ii in 1:length(tissuen)) {
-  ncelline <- sum(tissue == tissuen[ii])
-  if(max(correlations.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample) {
-    count <- count + 1
-    ## IC50
-    xx <- correlations.stats.ic50.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.stats.ic50.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.stats.ic50.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.stats.ic50.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.stats.ic50.tissue)[[2]]
-    cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    ## AUC
-    xx <- correlations.stats.auc.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.stats.auc.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.stats.auc.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.stats.auc.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.stats.auc.tissue)[[2]]
-    cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    if((count %% nf) == 1) {
-      pdf(file.path(saveres, sprintf("barplot_ic50_auc_tissue%i_cgp_ccle_paper.pdf", ceiling(count / nf))), height=14, width=10)
-      par(las=1, mar=c(6, 4, 6, 0), xaxt="n", mfrow=c(3, 2))
+## tissue-specific barplot for paper
+if (tissue.specific) {
+  pdf(file.path(saveres, "barplot_ic50_auc_tissue_cgp_ccle.pdf"), height=6, width=6)
+  for(ii in 1:length(tissuen)) {
+    ncelline <- sum(tissue == tissuen[ii])
+    if(max(correlations.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample) {
+      ## IC50
+      xx <- correlations.stats.ic50.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.stats.ic50.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.stats.ic50.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.stats.ic50.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.stats.ic50.tissue)[[2]]
+      cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      ## AUC
+      xx <- correlations.stats.auc.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.stats.auc.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.stats.auc.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.stats.auc.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.stats.auc.tissue)[[2]]
+      cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
+      # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
+      yylim <- c(0, 1)
+      mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Drug sensitivity measures\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
+      # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
+      # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
+      axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
+      text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
+      text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
     }
-    # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-    yylim <- c(0, 1)
-    mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Drug sensitivity measures\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
-    legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-    # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-    axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-    text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-    text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    if((count %% nf) == 0) { dev.off() }
   }
+  dev.off()
+
+  ## multiple barplots per page
+  count <- 0
+  nf <- 6
+  for(ii in 1:length(tissuen)) {
+    ncelline <- sum(tissue == tissuen[ii])
+    if(max(correlations.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample) {
+      count <- count + 1
+      ## IC50
+      xx <- correlations.stats.ic50.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.stats.ic50.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.stats.ic50.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.stats.ic50.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.stats.ic50.tissue)[[2]]
+      cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      ## AUC
+      xx <- correlations.stats.auc.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.stats.auc.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.stats.auc.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.stats.auc.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.stats.auc.tissue)[[2]]
+      cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      if((count %% nf) == 1) {
+        pdf(file.path(saveres, sprintf("barplot_ic50_auc_tissue%i_cgp_ccle_paper.pdf", ceiling(count / nf))), height=14, width=10)
+        par(las=1, mar=c(6, 4, 6, 0), xaxt="n", mfrow=c(3, 2))
+      }
+      # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
+      yylim <- c(0, 1)
+      mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Drug sensitivity measures\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
+      legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
+      # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
+      axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
+      text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
+      text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      if((count %% nf) == 0) { dev.off() }
+    }
+  }
+  if((count %% nf) != 0) { dev.off() }
 }
-if((count %% nf) != 0) { dev.off() }
 
 ## IC50
 pdf(file.path(saveres, "barplot_ic50_cgp_ccle.pdf"), height=6, width=6)
@@ -866,102 +872,103 @@ correlations.assoc.stats <- list("ic50"=tt, "ic50.filt"=tt, "ic50.call"=tt, "ic5
 
 ########################
 ## IC50 per tissue type
-
-for(ii in 1:length(tissuen)) {
-  myfn <- file.path(saveres, sprintf("assoc_ic50_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
-  if(!file.exists(myfn)) {
-    ## CCLE
-    message(sprintf("Gene-drug association based on IC50 for tissue %s (CCLE)", tissuen[ii]))
-    assoc.ic50.ccle <- NULL
-    for(i in 1:ncol(ic50.ccle)) {
-      message("Computation for drug ", gsub("drugid_", "", colnames(ic50.ccle)[i]))
-      myx <- !is.na(tissue.ccle) & tissue.ccle == tissuen[ii]
-      splitix <- parallel::splitIndices(nx=ncol(data.ccle), ncl=nbcore)
-      mcres <- parallel::mclapply(splitix, function(x, data, ic50, tissue, tissuex) {
-        res <- apply(X=data[ , x, drop=FALSE], MARGIN=2, FUN=gene.drug.assocs, y=ic50, z=tissue, method=genedrugm)
-        return(res)      
-      }, data=data.ccle[myx, , drop=FALSE], ic50=ic50.ccle[myx, i], tissue=tissue.ccle[myx])
-      mcres <- t(do.call(cbind, mcres))
-      mcres <- mcres[colnames(data.ccle), , drop=FALSE]
-      mcres <- cbind(mcres, "fdr"=p.adjust(mcres[ ,"pvalue"], method="fdr"))
-      assoc.ic50.ccle <- c(assoc.ic50.ccle, list(mcres))
-    }
-    message("")
-    names(assoc.ic50.ccle) <- colnames(ic50.ccle)
-    ## CGP
-    message(sprintf("Gene-drug association based on IC50 for tissue %s (CGP)", tissuen[ii]))
-    assoc.ic50.cgp <- NULL
-    for(i in 1:ncol(ic50.cgp)) {
-      message("Computation for drug ", gsub("drugid_", "", colnames(ic50.cgp)[i]))
-      myx <- !is.na(tissue.cgp) & tissue.cgp == tissuen[ii]
-      splitix <- parallel::splitIndices(nx=ncol(data.cgp), ncl=nbcore)
-      mcres <- parallel::mclapply(splitix, function(x, data, ic50, tissue) {
-        res <- apply(X=data[ ,x, drop=FALSE], MARGIN=2, FUN=gene.drug.assocs, y=ic50, z=tissue, method=genedrugm)
-        return(res)      
-      }, data=data.cgp[myx, , drop=FALSE], ic50=ic50.cgp[myx, i], tissue=tissue.cgp[myx])
-      mcres <- t(do.call(cbind, mcres))
-      mcres <- mcres[colnames(data.cgp), , drop=FALSE]
-      mcres <- cbind(mcres, "fdr"=p.adjust(mcres[ ,"pvalue"], method="fdr"))
-      assoc.ic50.cgp <- c(assoc.ic50.cgp, list(mcres))
-    }
-    message("")
-    names(assoc.ic50.cgp) <- colnames(ic50.cgp)
-    ## save all associations
-    ## CCLE
-    rr <- NULL
-    for(i in 1:length(assoc.ic50.ccle)) {
-      tt <- cbind(assoc.ic50.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.ccle[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.ccle[[i]]), "jetset.symbol"])
-      rr <- c(rr, list(data.frame(tt)))
-    }
-    names(rr) <- names(assoc.ic50.ccle)
-    WriteXLS::WriteXLS("rr", ExcelFileName=file.path(saveres, sprintf("ic50_ccle_results_gene_drug_%s.xls", toupper(gsub(badchars, "", tissuen[ii])))), row.names=TRUE)
-    ## CGP
-    rr <- NULL
-    for(i in 1:length(assoc.ic50.cgp)) {
-      tt <- cbind(assoc.ic50.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.cgp[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.cgp[[i]]), "jetset.symbol"])
-      rr <- c(rr, list(data.frame(tt)))
-    }
-    names(rr) <- names(assoc.ic50.cgp)
-    WriteXLS::WriteXLS("rr", ExcelFileName=file.path(saveres, sprintf("ic50_cgp_results_gene_drug_%s.xls", toupper(gsub(badchars, "", tissuen[ii])))), row.names=TRUE)
-    save(list=c("assoc.ic50.cgp", "assoc.ic50.ccle"), compress=TRUE, file=myfn)
-  }
-}
-
-correlations.assoc.stats.ic50.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
-for(ii in 1:length(tissuen)) {
-  myfn <- file.path(saveres, sprintf("assoc_ic50_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
-  if(file.exists(myfn)) {
-    load(myfn)
-    for(i in 1:length(assoc.ic50.ccle)) {
-      nnn <- sum(complete.cases(assoc.ic50.ccle[[i]][ , "estimate"], assoc.ic50.cgp[[i]][ , "estimate"]))
-      if(nnn >= minsample) {
-        cc <- cor.test(assoc.ic50.ccle[[i]][ , "estimate"], assoc.ic50.cgp[[i]][ , "estimate"], method="spearman", use="complete.obs", alternative="greater")
-      } else {
-        cc <- list("estimate"=NA, "p.value"=NA)
+if (tissue.specific) {
+  for(ii in 1:length(tissuen)) {
+    myfn <- file.path(saveres, sprintf("assoc_ic50_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
+    if(!file.exists(myfn)) {
+      ## CCLE
+      message(sprintf("Gene-drug association based on IC50 for tissue %s (CCLE)", tissuen[ii]))
+      assoc.ic50.ccle <- NULL
+      for(i in 1:ncol(ic50.ccle)) {
+        message("Computation for drug ", gsub("drugid_", "", colnames(ic50.ccle)[i]))
+        myx <- !is.na(tissue.ccle) & tissue.ccle == tissuen[ii]
+        splitix <- parallel::splitIndices(nx=ncol(data.ccle), ncl=nbcore)
+        mcres <- parallel::mclapply(splitix, function(x, data, ic50, tissue, tissuex) {
+          res <- apply(X=data[ , x, drop=FALSE], MARGIN=2, FUN=gene.drug.assocs, y=ic50, z=tissue, method=genedrugm)
+          return(res)      
+        }, data=data.ccle[myx, , drop=FALSE], ic50=ic50.ccle[myx, i], tissue=tissue.ccle[myx])
+        mcres <- t(do.call(cbind, mcres))
+        mcres <- mcres[colnames(data.ccle), , drop=FALSE]
+        mcres <- cbind(mcres, "fdr"=p.adjust(mcres[ ,"pvalue"], method="fdr"))
+        assoc.ic50.ccle <- c(assoc.ic50.ccle, list(mcres))
       }
-      ## correlation statistics
-      cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-      correlations.assoc.stats.ic50.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
+      message("")
+      names(assoc.ic50.ccle) <- colnames(ic50.ccle)
+      ## CGP
+      message(sprintf("Gene-drug association based on IC50 for tissue %s (CGP)", tissuen[ii]))
+      assoc.ic50.cgp <- NULL
+      for(i in 1:ncol(ic50.cgp)) {
+        message("Computation for drug ", gsub("drugid_", "", colnames(ic50.cgp)[i]))
+        myx <- !is.na(tissue.cgp) & tissue.cgp == tissuen[ii]
+        splitix <- parallel::splitIndices(nx=ncol(data.cgp), ncl=nbcore)
+        mcres <- parallel::mclapply(splitix, function(x, data, ic50, tissue) {
+          res <- apply(X=data[ ,x, drop=FALSE], MARGIN=2, FUN=gene.drug.assocs, y=ic50, z=tissue, method=genedrugm)
+          return(res)      
+        }, data=data.cgp[myx, , drop=FALSE], ic50=ic50.cgp[myx, i], tissue=tissue.cgp[myx])
+        mcres <- t(do.call(cbind, mcres))
+        mcres <- mcres[colnames(data.cgp), , drop=FALSE]
+        mcres <- cbind(mcres, "fdr"=p.adjust(mcres[ ,"pvalue"], method="fdr"))
+        assoc.ic50.cgp <- c(assoc.ic50.cgp, list(mcres))
+      }
+      message("")
+      names(assoc.ic50.cgp) <- colnames(ic50.cgp)
+      ## save all associations
+      ## CCLE
+      rr <- NULL
+      for(i in 1:length(assoc.ic50.ccle)) {
+        tt <- cbind(assoc.ic50.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.ccle[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.ccle[[i]]), "jetset.symbol"])
+        rr <- c(rr, list(data.frame(tt)))
+      }
+      names(rr) <- names(assoc.ic50.ccle)
+      WriteXLS::WriteXLS("rr", ExcelFileName=file.path(saveres, sprintf("ic50_ccle_results_gene_drug_%s.xls", toupper(gsub(badchars, "", tissuen[ii])))), row.names=TRUE)
+      ## CGP
+      rr <- NULL
+      for(i in 1:length(assoc.ic50.cgp)) {
+        tt <- cbind(assoc.ic50.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.ic50.cgp[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.ic50.cgp[[i]]), "jetset.symbol"])
+        rr <- c(rr, list(data.frame(tt)))
+      }
+      names(rr) <- names(assoc.ic50.cgp)
+      WriteXLS::WriteXLS("rr", ExcelFileName=file.path(saveres, sprintf("ic50_cgp_results_gene_drug_%s.xls", toupper(gsub(badchars, "", tissuen[ii])))), row.names=TRUE)
+      save(list=c("assoc.ic50.cgp", "assoc.ic50.ccle"), compress=TRUE, file=myfn)
     }
   }
-}
 
-correlations.assoc.stats.ic50.signif.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
-for(ii in 1:length(tissuen)) {
-  myfn <- file.path(saveres, sprintf("assoc_ic50_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
-  if(file.exists(myfn)) {
-    load(myfn)
-    for(i in 1:length(assoc.ic50.ccle)) {
-      myx <- assoc.ic50.ccle[[i]][ , "fdr"] < myfdr | assoc.ic50.cgp[[i]][ , "fdr"] < myfdr
-      nnn <- sum(complete.cases(assoc.ic50.ccle[[i]][myx, "estimate"], assoc.ic50.cgp[[i]][myx, "estimate"]))
-      if(nnn >= minsample) {
-        cc <- cor.test(assoc.ic50.ccle[[i]][myx, "estimate"], assoc.ic50.cgp[[i]][myx, "estimate"], method="spearman", use="complete.obs", alternative="greater")
-      } else {
-        cc <- list("estimate"=NA, "p.value"=NA)
+  correlations.assoc.stats.ic50.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
+  for(ii in 1:length(tissuen)) {
+    myfn <- file.path(saveres, sprintf("assoc_ic50_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
+    if(file.exists(myfn)) {
+      load(myfn)
+      for(i in 1:length(assoc.ic50.ccle)) {
+        nnn <- sum(complete.cases(assoc.ic50.ccle[[i]][ , "estimate"], assoc.ic50.cgp[[i]][ , "estimate"]))
+        if(nnn >= minsample) {
+          cc <- cor.test(assoc.ic50.ccle[[i]][ , "estimate"], assoc.ic50.cgp[[i]][ , "estimate"], method="spearman", use="complete.obs", alternative="greater")
+        } else {
+          cc <- list("estimate"=NA, "p.value"=NA)
+        }
+        ## correlation statistics
+        cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+        correlations.assoc.stats.ic50.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
       }
-      ## correlation statistics
-      cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-      correlations.assoc.stats.ic50.signif.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
+    }
+  }
+
+  correlations.assoc.stats.ic50.signif.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
+  for(ii in 1:length(tissuen)) {
+    myfn <- file.path(saveres, sprintf("assoc_ic50_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
+    if(file.exists(myfn)) {
+      load(myfn)
+      for(i in 1:length(assoc.ic50.ccle)) {
+        myx <- assoc.ic50.ccle[[i]][ , "fdr"] < myfdr | assoc.ic50.cgp[[i]][ , "fdr"] < myfdr
+        nnn <- sum(complete.cases(assoc.ic50.ccle[[i]][myx, "estimate"], assoc.ic50.cgp[[i]][myx, "estimate"]))
+        if(nnn >= minsample) {
+          cc <- cor.test(assoc.ic50.ccle[[i]][myx, "estimate"], assoc.ic50.cgp[[i]][myx, "estimate"], method="spearman", use="complete.obs", alternative="greater")
+        } else {
+          cc <- list("estimate"=NA, "p.value"=NA)
+        }
+        ## correlation statistics
+        cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+        correlations.assoc.stats.ic50.signif.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
+      }
     }
   }
 }
@@ -1085,105 +1092,106 @@ message("")
 dev.off()
 
 ## boxplot for gene-drug associations based on ic50
-pdf(file.path(saveres, sprintf("boxplot2_assoc_ic50_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
-## correlations for each drug per tissue type
-ll <- c(list("all_tissues"=correlations.assoc.stats[["ic50"]][ , "rho"]), lapply(apply(correlations.assoc.stats.ic50.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-ll[sapply(ll, length) < 3] <- NA
-par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of gene-drug associations (IC50) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
-ccol <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
-xx <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=1:length(ll))
-points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+if (tissue.specific) {
+  pdf(file.path(saveres, sprintf("boxplot2_assoc_ic50_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
+  ## correlations for each drug per tissue type
+  ll <- c(list("all_tissues"=correlations.assoc.stats[["ic50"]][ , "rho"]), lapply(apply(correlations.assoc.stats.ic50.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of gene-drug associations (IC50) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
+  ccol <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
+  xx <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=1:length(ll))
+  points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
-cor.diff.test <- NULL
-ll <- c(list("all_tissues"=correlations.assoc.stats[["ic50"]][ , "rho"]), lapply(apply(correlations.assoc.stats.ic50.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ddnn <- names(ll[[1]])
-for(i in 2:length(ll)) {
-  if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
-   wt <- list("estimate"=NA, "p.value"=NA) 
-  } else {
-    wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+  ## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
+  cor.diff.test <- NULL
+  ll <- c(list("all_tissues"=correlations.assoc.stats[["ic50"]][ , "rho"]), lapply(apply(correlations.assoc.stats.ic50.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ddnn <- names(ll[[1]])
+  for(i in 2:length(ll)) {
+    if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
+     wt <- list("estimate"=NA, "p.value"=NA) 
+    } else {
+      wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+    }
+    cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
   }
-  cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
-}
-dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
-# cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
-cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
-myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
-tt <- cor.diff.test[myx, , drop=FALSE]
-tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
-message("Are correlations between gene-drug associations (IC50) in some tissue types\n significantly higher than in all tissues combined?")
-if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
+  dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
+  # cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
+  cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
+  myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
+  tt <- cor.diff.test[myx, , drop=FALSE]
+  tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
+  message("Are correlations between gene-drug associations (IC50) in some tissue types\n significantly higher than in all tissues combined?")
+  if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 
-## boxplot for significant gene-drug associations based on ic50
-pdf(file.path(saveres, sprintf("boxplot2_assoc_ic50_ccle_cgp_signif_tissue_paper.pdf")), height=8, width=14)
-## correlations for each drug per tissue type
-ll <- c(list("all_tissues"=correlations.assoc.stats[["ic50.filt"]][ , "rho"]), lapply(apply(correlations.assoc.stats.ic50.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-ll[sapply(ll, length) < 3] <- NA
-par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main=sprintf("Correlations of gene-drug associations (IC50) across tissue types (FDR < %i%%)\nCCLE vs. CGP", round(myfdr * 100)), border="grey50", ylim=c(-1, 1), col="white", range=0)
-ccol <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
-xx <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=1:length(ll))
-points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+  ## boxplot for significant gene-drug associations based on ic50
+  pdf(file.path(saveres, sprintf("boxplot2_assoc_ic50_ccle_cgp_signif_tissue_paper.pdf")), height=8, width=14)
+  ## correlations for each drug per tissue type
+  ll <- c(list("all_tissues"=correlations.assoc.stats[["ic50.filt"]][ , "rho"]), lapply(apply(correlations.assoc.stats.ic50.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main=sprintf("Correlations of gene-drug associations (IC50) across tissue types (FDR < %i%%)\nCCLE vs. CGP", round(myfdr * 100)), border="grey50", ylim=c(-1, 1), col="white", range=0)
+  ccol <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
+  xx <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=1:length(ll))
+  points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
-cor.diff.test <- NULL
-ll <- c(list("all_tissues"=correlations.assoc.stats[["ic50.filt"]][ , "rho"]), lapply(apply(correlations.assoc.stats.ic50.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ddnn <- names(ll[[1]])
-for(i in 2:length(ll)) {
-  if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
-   wt <- list("estimate"=NA, "p.value"=NA) 
-  } else {
-    wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+  ## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
+  cor.diff.test <- NULL
+  ll <- c(list("all_tissues"=correlations.assoc.stats[["ic50.filt"]][ , "rho"]), lapply(apply(correlations.assoc.stats.ic50.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ddnn <- names(ll[[1]])
+  for(i in 2:length(ll)) {
+    if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
+     wt <- list("estimate"=NA, "p.value"=NA) 
+    } else {
+      wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+    }
+    cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
   }
-  cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
+  dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
+  # cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
+  cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
+  myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
+  tt <- cor.diff.test[myx, , drop=FALSE]
+  tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
+  message("Are correlations between significant gene-drug associations (IC50) in some tissue types\n significantly higher than in all tissues combined?")
+  if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 }
-dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
-# cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
-cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
-myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
-tt <- cor.diff.test[myx, , drop=FALSE]
-tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
-message("Are correlations between significant gene-drug associations (IC50) in some tissue types\n significantly higher than in all tissues combined?")
-if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
-
 
 ########################
 ## IC50 sensitivity calling
@@ -1308,102 +1316,103 @@ dev.off()
 
 ########################
 ## AUC per tissue types
-
-for(ii in 1:length(tissuen)) {
-  myfn <- file.path(saveres, sprintf("assoc_auc_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
-  if(!file.exists(myfn)) {
-    ## CCLE
-    message(sprintf("Gene-drug association based on AUC for tissue %s (CCLE)", tissuen[ii]))
-    assoc.auc.ccle <- NULL
-    for(i in 1:ncol(auc.ccle)) {
-      message("Computation for drug ", gsub("drugid_", "", colnames(auc.ccle)[i]))
-      myx <- !is.na(tissue.ccle) & tissue.ccle == tissuen[ii]
-      splitix <- parallel::splitIndices(nx=ncol(data.ccle), ncl=nbcore)
-      mcres <- parallel::mclapply(splitix, function(x, data, auc, tissue, tissuex) {
-        res <- apply(X=data[ , x, drop=FALSE], MARGIN=2, FUN=gene.drug.assocs, y=auc, z=tissue, method=genedrugm)
-        return(res)      
-      }, data=data.ccle[myx, , drop=FALSE], auc=auc.ccle[myx, i], tissue=tissue.ccle[myx])
-      mcres <- t(do.call(cbind, mcres))
-      mcres <- mcres[colnames(data.ccle), , drop=FALSE]
-      mcres <- cbind(mcres, "fdr"=p.adjust(mcres[ ,"pvalue"], method="fdr"))
-      assoc.auc.ccle <- c(assoc.auc.ccle, list(mcres))
-    }
-    message("")
-    names(assoc.auc.ccle) <- colnames(auc.ccle)
-    ## CGP
-    message(sprintf("Gene-drug association based on AUC for tissue %s (CGP)", tissuen[ii]))
-    assoc.auc.cgp <- NULL
-    for(i in 1:ncol(auc.cgp)) {
-      message("Computation for drug ", gsub("drugid_", "", colnames(auc.cgp)[i]))
-      myx <- !is.na(tissue.cgp) & tissue.cgp == tissuen[ii]
-      splitix <- parallel::splitIndices(nx=ncol(data.cgp), ncl=nbcore)
-      mcres <- parallel::mclapply(splitix, function(x, data, auc, tissue) {
-        res <- apply(X=data[ ,x, drop=FALSE], MARGIN=2, FUN=gene.drug.assocs, y=auc, z=tissue, method=genedrugm)
-        return(res)      
-      }, data=data.cgp[myx, , drop=FALSE], auc=auc.cgp[myx, i], tissue=tissue.cgp[myx])
-      mcres <- t(do.call(cbind, mcres))
-      mcres <- mcres[colnames(data.cgp), , drop=FALSE]
-      mcres <- cbind(mcres, "fdr"=p.adjust(mcres[ ,"pvalue"], method="fdr"))
-      assoc.auc.cgp <- c(assoc.auc.cgp, list(mcres))
-    }
-    message("")
-    names(assoc.auc.cgp) <- colnames(auc.cgp)
-    ## save all associations
-    ## CCLE
-    rr <- NULL
-    for(i in 1:length(assoc.auc.ccle)) {
-      tt <- cbind(assoc.auc.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.ccle[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.ccle[[i]]), "jetset.symbol"])
-      rr <- c(rr, list(data.frame(tt)))
-    }
-    names(rr) <- names(assoc.auc.ccle)
-    WriteXLS::WriteXLS("rr", ExcelFileName=file.path(saveres, sprintf("auc_ccle_results_gene_drug_%s.xls", toupper(gsub(badchars, "", tissuen[ii])))), row.names=TRUE)
-    ## CGP
-    rr <- NULL
-    for(i in 1:length(assoc.auc.cgp)) {
-      tt <- cbind(assoc.auc.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.cgp[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.cgp[[i]]), "jetset.symbol"])
-      rr <- c(rr, list(data.frame(tt)))
-    }
-    names(rr) <- names(assoc.auc.cgp)
-    WriteXLS::WriteXLS("rr", ExcelFileName=file.path(saveres, sprintf("auc_cgp_results_gene_drug_%s.xls", toupper(gsub(badchars, "", tissuen[ii])))), row.names=TRUE)
-    save(list=c("assoc.auc.cgp", "assoc.auc.ccle"), compress=TRUE, file=myfn)
-  }
-}
-
-correlations.assoc.stats.auc.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
-for(ii in 1:length(tissuen)) {
-  myfn <- file.path(saveres, sprintf("assoc_auc_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
-  if(file.exists(myfn)) {
-    load(myfn)
-    for(i in 1:length(assoc.auc.ccle)) {
-      nnn <- sum(complete.cases(assoc.auc.ccle[[i]][ , "estimate"], assoc.auc.cgp[[i]][ , "estimate"]))
-      if(nnn >= minsample) {
-        cc <- cor.test(assoc.auc.ccle[[i]][ , "estimate"], assoc.auc.cgp[[i]][ , "estimate"], method="spearman", use="complete.obs", alternative="greater")
-      } else {
-        cc <- list("estimate"=NA, "p.value"=NA)
+if (tissue.specific) {
+  for(ii in 1:length(tissuen)) {
+    myfn <- file.path(saveres, sprintf("assoc_auc_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
+    if(!file.exists(myfn)) {
+      ## CCLE
+      message(sprintf("Gene-drug association based on AUC for tissue %s (CCLE)", tissuen[ii]))
+      assoc.auc.ccle <- NULL
+      for(i in 1:ncol(auc.ccle)) {
+        message("Computation for drug ", gsub("drugid_", "", colnames(auc.ccle)[i]))
+        myx <- !is.na(tissue.ccle) & tissue.ccle == tissuen[ii]
+        splitix <- parallel::splitIndices(nx=ncol(data.ccle), ncl=nbcore)
+        mcres <- parallel::mclapply(splitix, function(x, data, auc, tissue, tissuex) {
+          res <- apply(X=data[ , x, drop=FALSE], MARGIN=2, FUN=gene.drug.assocs, y=auc, z=tissue, method=genedrugm)
+          return(res)      
+        }, data=data.ccle[myx, , drop=FALSE], auc=auc.ccle[myx, i], tissue=tissue.ccle[myx])
+        mcres <- t(do.call(cbind, mcres))
+        mcres <- mcres[colnames(data.ccle), , drop=FALSE]
+        mcres <- cbind(mcres, "fdr"=p.adjust(mcres[ ,"pvalue"], method="fdr"))
+        assoc.auc.ccle <- c(assoc.auc.ccle, list(mcres))
       }
-      ## correlation statistics
-      cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-      correlations.assoc.stats.auc.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
+      message("")
+      names(assoc.auc.ccle) <- colnames(auc.ccle)
+      ## CGP
+      message(sprintf("Gene-drug association based on AUC for tissue %s (CGP)", tissuen[ii]))
+      assoc.auc.cgp <- NULL
+      for(i in 1:ncol(auc.cgp)) {
+        message("Computation for drug ", gsub("drugid_", "", colnames(auc.cgp)[i]))
+        myx <- !is.na(tissue.cgp) & tissue.cgp == tissuen[ii]
+        splitix <- parallel::splitIndices(nx=ncol(data.cgp), ncl=nbcore)
+        mcres <- parallel::mclapply(splitix, function(x, data, auc, tissue) {
+          res <- apply(X=data[ ,x, drop=FALSE], MARGIN=2, FUN=gene.drug.assocs, y=auc, z=tissue, method=genedrugm)
+          return(res)      
+        }, data=data.cgp[myx, , drop=FALSE], auc=auc.cgp[myx, i], tissue=tissue.cgp[myx])
+        mcres <- t(do.call(cbind, mcres))
+        mcres <- mcres[colnames(data.cgp), , drop=FALSE]
+        mcres <- cbind(mcres, "fdr"=p.adjust(mcres[ ,"pvalue"], method="fdr"))
+        assoc.auc.cgp <- c(assoc.auc.cgp, list(mcres))
+      }
+      message("")
+      names(assoc.auc.cgp) <- colnames(auc.cgp)
+      ## save all associations
+      ## CCLE
+      rr <- NULL
+      for(i in 1:length(assoc.auc.ccle)) {
+        tt <- cbind(assoc.auc.ccle[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.ccle[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.ccle[[i]]), "jetset.symbol"])
+        rr <- c(rr, list(data.frame(tt)))
+      }
+      names(rr) <- names(assoc.auc.ccle)
+      WriteXLS::WriteXLS("rr", ExcelFileName=file.path(saveres, sprintf("auc_ccle_results_gene_drug_%s.xls", toupper(gsub(badchars, "", tissuen[ii])))), row.names=TRUE)
+      ## CGP
+      rr <- NULL
+      for(i in 1:length(assoc.auc.cgp)) {
+        tt <- cbind(assoc.auc.cgp[[i]], "entrez_gene_id"=annot[rownames(assoc.auc.cgp[[i]]), "EntrezID"], "gene_symbol"=annot[rownames(assoc.auc.cgp[[i]]), "jetset.symbol"])
+        rr <- c(rr, list(data.frame(tt)))
+      }
+      names(rr) <- names(assoc.auc.cgp)
+      WriteXLS::WriteXLS("rr", ExcelFileName=file.path(saveres, sprintf("auc_cgp_results_gene_drug_%s.xls", toupper(gsub(badchars, "", tissuen[ii])))), row.names=TRUE)
+      save(list=c("assoc.auc.cgp", "assoc.auc.ccle"), compress=TRUE, file=myfn)
     }
   }
-}
 
-correlations.assoc.stats.auc.signif.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
-for(ii in 1:length(tissuen)) {
-  myfn <- file.path(saveres, sprintf("assoc_auc_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
-  if(file.exists(myfn)) {
-    load(myfn)
-    for(i in 1:length(assoc.auc.ccle)) {
-      myx <- assoc.auc.ccle[[i]][ , "fdr"] < myfdr | assoc.auc.cgp[[i]][ , "fdr"] < myfdr
-      nnn <- sum(complete.cases(assoc.auc.ccle[[i]][myx, "estimate"], assoc.auc.cgp[[i]][myx, "estimate"]))
-      if(nnn >= minsample) {
-        cc <- cor.test(assoc.auc.ccle[[i]][myx, "estimate"], assoc.auc.cgp[[i]][myx, "estimate"], method="spearman", use="complete.obs", alternative="greater")
-      } else {
-        cc <- list("estimate"=NA, "p.value"=NA)
+  correlations.assoc.stats.auc.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
+  for(ii in 1:length(tissuen)) {
+    myfn <- file.path(saveres, sprintf("assoc_auc_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
+    if(file.exists(myfn)) {
+      load(myfn)
+      for(i in 1:length(assoc.auc.ccle)) {
+        nnn <- sum(complete.cases(assoc.auc.ccle[[i]][ , "estimate"], assoc.auc.cgp[[i]][ , "estimate"]))
+        if(nnn >= minsample) {
+          cc <- cor.test(assoc.auc.ccle[[i]][ , "estimate"], assoc.auc.cgp[[i]][ , "estimate"], method="spearman", use="complete.obs", alternative="greater")
+        } else {
+          cc <- list("estimate"=NA, "p.value"=NA)
+        }
+        ## correlation statistics
+        cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+        correlations.assoc.stats.auc.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
       }
-      ## correlation statistics
-      cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-      correlations.assoc.stats.auc.signif.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
+    }
+  }
+
+  correlations.assoc.stats.auc.signif.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
+  for(ii in 1:length(tissuen)) {
+    myfn <- file.path(saveres, sprintf("assoc_auc_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
+    if(file.exists(myfn)) {
+      load(myfn)
+      for(i in 1:length(assoc.auc.ccle)) {
+        myx <- assoc.auc.ccle[[i]][ , "fdr"] < myfdr | assoc.auc.cgp[[i]][ , "fdr"] < myfdr
+        nnn <- sum(complete.cases(assoc.auc.ccle[[i]][myx, "estimate"], assoc.auc.cgp[[i]][myx, "estimate"]))
+        if(nnn >= minsample) {
+          cc <- cor.test(assoc.auc.ccle[[i]][myx, "estimate"], assoc.auc.cgp[[i]][myx, "estimate"], method="spearman", use="complete.obs", alternative="greater")
+        } else {
+          cc <- list("estimate"=NA, "p.value"=NA)
+        }
+        ## correlation statistics
+        cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+        correlations.assoc.stats.auc.signif.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
+      }
     }
   }
 }
@@ -1527,107 +1536,109 @@ message("")
 dev.off()
 
 save(list=c("correlations", "correlations.assoc.stats"), compress=TRUE, file=file.path(saveres, "correlations_assoc_stats.RData"))
-save(list=c("correlations.assoc.stats.ic50.tissue", "correlations.assoc.stats.auc.tissue", "correlations.assoc.stats.ic50.signif.tissue", "correlations.assoc.stats.auc.signif.tissue"), compress=TRUE, file=file.path(saveres, "correlations_assoc_stats_tissue.RData"))
+if (tissue.specific) {
+  save(list=c("correlations.assoc.stats.ic50.tissue", "correlations.assoc.stats.auc.tissue", "correlations.assoc.stats.ic50.signif.tissue", "correlations.assoc.stats.auc.signif.tissue"), compress=TRUE, file=file.path(saveres, "correlations_assoc_stats_tissue.RData"))
 
-## boxplot for gene-drug associations based on auc
-pdf(file.path(saveres, sprintf("boxplot2_assoc_auc_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
-## correlations for each drug per tissue type
-ll <- c(list("all_tissues"=correlations.assoc.stats[["auc"]][ , "rho"]), lapply(apply(correlations.assoc.stats.auc.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-ll[sapply(ll, length) < 3] <- NA
-par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of gene-drug associations (AUC) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
-ccol <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
-xx <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=1:length(ll))
-points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+  ## boxplot for gene-drug associations based on auc
+  pdf(file.path(saveres, sprintf("boxplot2_assoc_auc_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
+  ## correlations for each drug per tissue type
+  ll <- c(list("all_tissues"=correlations.assoc.stats[["auc"]][ , "rho"]), lapply(apply(correlations.assoc.stats.auc.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of gene-drug associations (AUC) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
+  ccol <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
+  xx <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=1:length(ll))
+  points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
-cor.diff.test <- NULL
-ll <- c(list("all_tissues"=correlations.assoc.stats[["auc"]][ , "rho"]), lapply(apply(correlations.assoc.stats.auc.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ddnn <- names(ll[[1]])
-for(i in 2:length(ll)) {
-  if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
-   wt <- list("estimate"=NA, "p.value"=NA) 
-  } else {
-    wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+  ## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
+  cor.diff.test <- NULL
+  ll <- c(list("all_tissues"=correlations.assoc.stats[["auc"]][ , "rho"]), lapply(apply(correlations.assoc.stats.auc.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ddnn <- names(ll[[1]])
+  for(i in 2:length(ll)) {
+    if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
+     wt <- list("estimate"=NA, "p.value"=NA) 
+    } else {
+      wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+    }
+    cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
   }
-  cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
-}
-dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
-# cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
-cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
-myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
-tt <- cor.diff.test[myx, , drop=FALSE]
-tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
-message("Are correlations between gene-drug associations (AUC) in some tissue types\n significantly higher than in all tissues combined?")
-if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
+  dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
+  # cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
+  cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
+  myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
+  tt <- cor.diff.test[myx, , drop=FALSE]
+  tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
+  message("Are correlations between gene-drug associations (AUC) in some tissue types\n significantly higher than in all tissues combined?")
+  if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 
-## boxplot for significant gene-drug associations based on auc
-pdf(file.path(saveres, sprintf("boxplot2_assoc_auc_ccle_cgp_signif_tissue_paper.pdf")), height=8, width=14)
-## correlations for each drug per tissue type
-ll <- c(list("all_tissues"=correlations.assoc.stats[["auc.filt"]][ , "rho"]), lapply(apply(correlations.assoc.stats.auc.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-ll[sapply(ll, length) < 3] <- NA
-par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main=sprintf("Correlations of gene-drug associations (AUC) across tissue types (FDR < %i%%)\nCCLE vs. CGP", round(myfdr * 100)), border="grey50", ylim=c(-1, 1), col="white", range=0)
-ccol <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
-xx <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=1:length(ll))
-points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+  ## boxplot for significant gene-drug associations based on auc
+  pdf(file.path(saveres, sprintf("boxplot2_assoc_auc_ccle_cgp_signif_tissue_paper.pdf")), height=8, width=14)
+  ## correlations for each drug per tissue type
+  ll <- c(list("all_tissues"=correlations.assoc.stats[["auc.filt"]][ , "rho"]), lapply(apply(correlations.assoc.stats.auc.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main=sprintf("Correlations of gene-drug associations (AUC) across tissue types (FDR < %i%%)\nCCLE vs. CGP", round(myfdr * 100)), border="grey50", ylim=c(-1, 1), col="white", range=0)
+  ccol <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
+  xx <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=1:length(ll))
+  points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
-cor.diff.test <- NULL
-ll <- c(list("all_tissues"=correlations.assoc.stats[["auc.filt"]][ , "rho"]), lapply(apply(correlations.assoc.stats.auc.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ddnn <- names(ll[[1]])
-for(i in 2:length(ll)) {
-  if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
-   wt <- list("estimate"=NA, "p.value"=NA) 
-  } else {
-    wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+  ## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
+  cor.diff.test <- NULL
+  ll <- c(list("all_tissues"=correlations.assoc.stats[["auc.filt"]][ , "rho"]), lapply(apply(correlations.assoc.stats.auc.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ddnn <- names(ll[[1]])
+  for(i in 2:length(ll)) {
+    if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
+     wt <- list("estimate"=NA, "p.value"=NA) 
+    } else {
+      wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+    }
+    cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
   }
-  cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
+  dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
+  # cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
+  cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
+  myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
+  tt <- cor.diff.test[myx, , drop=FALSE]
+  tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
+  message("Are correlations between significant gene-drug associations (AUC) in some tissue types\n significantly higher than in all tissues combined?")
+  if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 }
-dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
-# cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
-cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
-myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
-tt <- cor.diff.test[myx, , drop=FALSE]
-tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
-message("Are correlations between significant gene-drug associations (AUC) in some tissue types\n significantly higher than in all tissues combined?")
-if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 
 ########################
 ## AUC sensitivity calling
@@ -1931,189 +1942,190 @@ text(x=mp + (max(mp) * 0.0515), y=xx, pos=2, labels=ifelse(pp < 0.05, "*", " "),
 dev.off()
 
 ## barplot for paper
-pdf(file.path(saveres, "barplot_assoc_ic50_auc_tissue_cgp_ccle.pdf"), height=6, width=6)
-for(ii in 1:length(tissuen)) {
-  ncelline <- sum(tissue == tissuen[ii])
-  if(max(correlations.assoc.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.assoc.stats.ic50.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
-    ## IC50
-    xx <- correlations.assoc.stats.ic50.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.assoc.stats.ic50.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.assoc.stats.ic50.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.assoc.stats.ic50.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.ic50.tissue)[[2]]
-    cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    ## AUC
-    xx <- correlations.assoc.stats.auc.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.assoc.stats.auc.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.assoc.stats.auc.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.assoc.stats.auc.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.auc.tissue)[[2]]
-    cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
-    # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-    yylim <- c(0, 1)
-    mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Drug sensitivity measures (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
-    # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-    # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-    axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-    text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-    text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-  }
-}
-dev.off()
-
-## multiple barplots per page
-count <- 0
-nf <- 6
-for(ii in 1:length(tissuen)) {
-  ncelline <- sum(tissue == tissuen[ii])
-  if(max(correlations.assoc.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.assoc.stats.ic50.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
-    count <- count + 1
-    ## IC50
-    xx <- correlations.assoc.stats.ic50.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.assoc.stats.ic50.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.assoc.stats.ic50.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.assoc.stats.ic50.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.ic50.tissue)[[2]]
-    cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    ## AUC
-    xx <- correlations.assoc.stats.auc.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.assoc.stats.auc.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.assoc.stats.auc.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.assoc.stats.auc.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.auc.tissue)[[2]]
-    cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    if((count %% nf) == 1) {
-      pdf(file.path(saveres, sprintf("barplot_assoc_ic50_auc_tissue%i_cgp_ccle_paper.pdf", ceiling(count / nf))), height=14, width=10)
-      par(las=1, mar=c(6, 4, 6, 0), xaxt="n", mfrow=c(3, 2))
+if (tissue.specific) {
+  pdf(file.path(saveres, "barplot_assoc_ic50_auc_tissue_cgp_ccle.pdf"), height=6, width=6)
+  for(ii in 1:length(tissuen)) {
+    ncelline <- sum(tissue == tissuen[ii])
+    if(max(correlations.assoc.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.assoc.stats.ic50.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
+      ## IC50
+      xx <- correlations.assoc.stats.ic50.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.assoc.stats.ic50.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.assoc.stats.ic50.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.assoc.stats.ic50.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.ic50.tissue)[[2]]
+      cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      ## AUC
+      xx <- correlations.assoc.stats.auc.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.assoc.stats.auc.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.assoc.stats.auc.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.assoc.stats.auc.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.auc.tissue)[[2]]
+      cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
+      # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
+      yylim <- c(0, 1)
+      mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Drug sensitivity measures (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
+      # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
+      # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
+      axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
+      text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
+      text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
     }
-    # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-    yylim <- c(0, 1)
-    mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Gene-drug associations (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
-    legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-    # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-    axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-    text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-    text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    if((count %% nf) == 0) { dev.off() }
   }
-}
-if((count %% nf) != 0) { dev.off() }
+  dev.off()
 
-## barplot for paper
-pdf(file.path(saveres, "barplot_assoc_ic50_auc_signif_tissue_cgp_ccle.pdf"), height=6, width=6)
-for(ii in 1:length(tissuen)) {
-  ncelline <- sum(tissue == tissuen[ii])
-  if(max(correlations.assoc.stats.ic50.signif.tissue[ii, , "n"], na.rm=TRUE) >= minsample) {
-    ## IC50
-    xx <- correlations.assoc.stats.ic50.signif.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.assoc.stats.ic50.signif.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.assoc.stats.ic50.signif.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.assoc.stats.ic50.signif.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.ic50.signif.tissue)[[2]]
-    cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    ## AUC
-    xx <- correlations.assoc.stats.auc.signif.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.assoc.stats.auc.signif.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.assoc.stats.auc.signif.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.assoc.stats.auc.signif.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.auc.signif.tissue)[[2]]
-    cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
-    # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-    yylim <- c(0, 1)
-    mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Gene-drug association (FDR < %i%%)\n%s (%i cell lines)", round(myfdr * 100), gsub("_", " ", tissuen[ii]), ncelline))
-    # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-    # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-    axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-    text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-    text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-  }
-}
-dev.off()
-
-## multiple barplots per page
-count <- 0
-nf <- 6
-for(ii in 1:length(tissuen)) {
-  ncelline <- sum(tissue == tissuen[ii])
-  if(max(correlations.assoc.stats.ic50.signif.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.assoc.stats.ic50.signif.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
-    count <- count + 1
-    ## IC50
-    xx <- correlations.assoc.stats.ic50.signif.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.assoc.stats.ic50.signif.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.assoc.stats.ic50.signif.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.assoc.stats.ic50.signif.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.ic50.signif.tissue)[[2]]
-    cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    ## AUC
-    xx <- correlations.assoc.stats.auc.signif.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.assoc.stats.auc.signif.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.assoc.stats.auc.signif.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.assoc.stats.auc.signif.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.auc.signif.tissue)[[2]]
-    cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    if((count %% nf) == 1) {
-      pdf(file.path(saveres, sprintf("barplot_assoc_ic50_auc_signif_tissue%i_cgp_ccle_paper.pdf", ceiling(count / nf))), height=14, width=10)
-      par(las=1, mar=c(6, 4, 6, 0), xaxt="n", mfrow=c(3, 2))
+  ## multiple barplots per page
+  count <- 0
+  nf <- 6
+  for(ii in 1:length(tissuen)) {
+    ncelline <- sum(tissue == tissuen[ii])
+    if(max(correlations.assoc.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.assoc.stats.ic50.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
+      count <- count + 1
+      ## IC50
+      xx <- correlations.assoc.stats.ic50.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.assoc.stats.ic50.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.assoc.stats.ic50.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.assoc.stats.ic50.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.ic50.tissue)[[2]]
+      cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      ## AUC
+      xx <- correlations.assoc.stats.auc.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.assoc.stats.auc.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.assoc.stats.auc.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.assoc.stats.auc.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.auc.tissue)[[2]]
+      cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      if((count %% nf) == 1) {
+        pdf(file.path(saveres, sprintf("barplot_assoc_ic50_auc_tissue%i_cgp_ccle_paper.pdf", ceiling(count / nf))), height=14, width=10)
+        par(las=1, mar=c(6, 4, 6, 0), xaxt="n", mfrow=c(3, 2))
+      }
+      # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
+      yylim <- c(0, 1)
+      mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Gene-drug associations (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
+      legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
+      # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
+      axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
+      text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
+      text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      if((count %% nf) == 0) { dev.off() }
     }
-    # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-    yylim <- c(0, 1)
-    mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Gene-drug associations (FDR < %i%%)\n%s (%i cell lines)", round(myfdr * 100), gsub("_", " ", tissuen[ii]), ncelline))
-    legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-    # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-    axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-    text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-    text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    if((count %% nf) == 0) { dev.off() }
   }
-}
-if((count %% nf) != 0) { dev.off() }
+  if((count %% nf) != 0) { dev.off() }
 
+  ## barplot for paper
+  pdf(file.path(saveres, "barplot_assoc_ic50_auc_signif_tissue_cgp_ccle.pdf"), height=6, width=6)
+  for(ii in 1:length(tissuen)) {
+    ncelline <- sum(tissue == tissuen[ii])
+    if(max(correlations.assoc.stats.ic50.signif.tissue[ii, , "n"], na.rm=TRUE) >= minsample) {
+      ## IC50
+      xx <- correlations.assoc.stats.ic50.signif.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.assoc.stats.ic50.signif.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.assoc.stats.ic50.signif.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.assoc.stats.ic50.signif.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.ic50.signif.tissue)[[2]]
+      cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      ## AUC
+      xx <- correlations.assoc.stats.auc.signif.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.assoc.stats.auc.signif.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.assoc.stats.auc.signif.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.assoc.stats.auc.signif.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.auc.signif.tissue)[[2]]
+      cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
+      # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
+      yylim <- c(0, 1)
+      mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Gene-drug association (FDR < %i%%)\n%s (%i cell lines)", round(myfdr * 100), gsub("_", " ", tissuen[ii]), ncelline))
+      # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
+      # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
+      axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
+      text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
+      text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+    }
+  }
+  dev.off()
+
+  ## multiple barplots per page
+  count <- 0
+  nf <- 6
+  for(ii in 1:length(tissuen)) {
+    ncelline <- sum(tissue == tissuen[ii])
+    if(max(correlations.assoc.stats.ic50.signif.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.assoc.stats.ic50.signif.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
+      count <- count + 1
+      ## IC50
+      xx <- correlations.assoc.stats.ic50.signif.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.assoc.stats.ic50.signif.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.assoc.stats.ic50.signif.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.assoc.stats.ic50.signif.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.ic50.signif.tissue)[[2]]
+      cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      ## AUC
+      xx <- correlations.assoc.stats.auc.signif.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.assoc.stats.auc.signif.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.assoc.stats.auc.signif.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.assoc.stats.auc.signif.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.assoc.stats.auc.signif.tissue)[[2]]
+      cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      if((count %% nf) == 1) {
+        pdf(file.path(saveres, sprintf("barplot_assoc_ic50_auc_signif_tissue%i_cgp_ccle_paper.pdf", ceiling(count / nf))), height=14, width=10)
+        par(las=1, mar=c(6, 4, 6, 0), xaxt="n", mfrow=c(3, 2))
+      }
+      # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
+      yylim <- c(0, 1)
+      mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Gene-drug associations (FDR < %i%%)\n%s (%i cell lines)", round(myfdr * 100), gsub("_", " ", tissuen[ii]), ncelline))
+      legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
+      # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
+      axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
+      text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
+      text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      if((count %% nf) == 0) { dev.off() }
+    }
+  }
+  if((count %% nf) != 0) { dev.off() }
+}
 
 ###############################################################################
 ###############################################################################
@@ -2139,122 +2151,123 @@ if(!file.exists(myfn)) {
 
 ########################
 ## IC50 per tissue types
-
-for(ii in 1:length(tissuen)) {
-  ttt <- toupper(gsub(badchars, "", tissuen[ii]))
-  myfn <- file.path(saveres, sprintf("gsea_ic50_cgp_ccle_%s.RData", ttt))
-  if(!file.exists(myfn)) {
-    myfn2 <- file.path(saveres, sprintf("assoc_ic50_cgp_ccle_%s.RData", ttt))
-    if(file.exists(myfn2)) {
-      ## load gene-drug associations for a specific tissue type
-      load(myfn2)
-      ## CCLE
-      message(sprintf("GSEA based on IC50 in %s (CCLE)", ttt))
-      ## create rankings for each drug
-      dir.create(file.path(saveres, "GSEA", "rankings", "CCLE", ttt), recursive=TRUE, showWarnings=FALSE)
-      rank.files <- NULL
-      for(i in 1:length(assoc.ic50.ccle)) {
-        ss <- assoc.ic50.ccle[[i]][ , "stat"]
-        ss <- sort(ss, decreasing=TRUE, na.last=NA)
-        ss[ss == Inf] <- .Machine$double.xmax
-        ss[ss == -Inf] <- -.Machine$double.xmax
-        rankg <- cbind(annot[names(ss), "EntrezID"], ss)
-        fff <- file.path(saveres, "GSEA", "rankings", "CCLE", ttt, sprintf("ic50_%s.rnk", gsub("drugid_", "", names(assoc.ic50.ccle)[i])))
-        write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
-        rank.files <- c(rank.files, fff)  
+if (tissue.specific) {
+  for(ii in 1:length(tissuen)) {
+    ttt <- toupper(gsub(badchars, "", tissuen[ii]))
+    myfn <- file.path(saveres, sprintf("gsea_ic50_cgp_ccle_%s.RData", ttt))
+    if(!file.exists(myfn)) {
+      myfn2 <- file.path(saveres, sprintf("assoc_ic50_cgp_ccle_%s.RData", ttt))
+      if(file.exists(myfn2)) {
+        ## load gene-drug associations for a specific tissue type
+        load(myfn2)
+        ## CCLE
+        message(sprintf("GSEA based on IC50 in %s (CCLE)", ttt))
+        ## create rankings for each drug
+        dir.create(file.path(saveres, "GSEA", "rankings", "CCLE", ttt), recursive=TRUE, showWarnings=FALSE)
+        rank.files <- NULL
+        for(i in 1:length(assoc.ic50.ccle)) {
+          ss <- assoc.ic50.ccle[[i]][ , "stat"]
+          ss <- sort(ss, decreasing=TRUE, na.last=NA)
+          ss[ss == Inf] <- .Machine$double.xmax
+          ss[ss == -Inf] <- -.Machine$double.xmax
+          rankg <- cbind(annot[names(ss), "EntrezID"], ss)
+          fff <- file.path(saveres, "GSEA", "rankings", "CCLE", ttt, sprintf("ic50_%s.rnk", gsub("drugid_", "", names(assoc.ic50.ccle)[i])))
+          write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
+          rank.files <- c(rank.files, fff)  
+        }
+        names(rank.files) <- gsub("drugid_", "", names(assoc.ic50.ccle))
+        ## GSEA
+        dir.create(file.path(saveres, "GSEA", "reports", "CCLE", ttt), recursive=TRUE, showWarnings=FALSE)
+        gsea.res <- mclapply(1:length(rank.files), function(x, y, z, ...) { 
+        	tt <- gsea.prerank(exe.path=gsea.exec, gmt.path=genesets.filen, rank.path=y[x], gsea.collapse=FALSE, nperm=gsea.nperm, scoring.scheme="weighted", make.sets=TRUE, include.only.symbols=FALSE, plot.top.x=20, set.max=max.geneset.size, set.min=min.geneset.size, zip.report=FALSE, gsea.out=file.path(saveres, "GSEA", "reports", "CCLE", ttt), replace.res=FALSE, gsea.seed=987654321)
+          tt <- data.frame("geneset"=rownames(tt), tt[ , -c(1, 2, 3, 12)], "description"=z[rownames(tt)])
+          tt[!is.na(tt[ , "NOM.p.val"]) & tt[ , "NOM.p.val"] == 0, "NOM.p.val"] <- 1 / (gsea.nperm + 1)
+          return(tt)
+        }, y=rank.files, z=genesets$description, gsea.exec=gsea.exec, genesets.filen=genesets.filen2, gsea.nperm=gsea.nperm, max.geneset.size=max.geneset.size, min.geneset.size=min.geneset.size, saveres=saveres)
+        names(gsea.res) <- names(rank.files)
+        ## save all class comparisons into a multisheets xls file
+        WriteXLS::WriteXLS("gsea.res", ExcelFileName=file.path(saveres, sprintf("ic50_ccle_results_gsea_gene_drug_%s.xls", ttt)))
+        gsea.ic50.ccle <- lapply(gsea.res, function(x, y) {
+          rr <- matrix(NA, nrow=length(y), ncol=3, dimnames=list(y, c("nes", "pvalue", "fdr")))
+          rr[as.character(x[ , "geneset"]), ] <- data.matrix(x[ , c("NES", "NOM.p.val", "FDR.q.val")])
+          return(rr)
+        }, y=names(genesets$geneset))
+        message("")
+        ## CGP
+        message(sprintf("GSEA based on IC50 in %s (CGP)", ttt))
+        ## create rankings for each drug
+        dir.create(file.path(saveres, "GSEA", "rankings", "CGP", ttt), recursive=TRUE, showWarnings=FALSE)
+        rank.files <- NULL
+        for(i in 1:length(assoc.ic50.cgp)) {
+          ss <- assoc.ic50.cgp[[i]][ , "stat"]
+          ss <- sort(ss, decreasing=TRUE, na.last=NA)
+          ss[ss == Inf] <- .Machine$double.xmax
+          ss[ss == -Inf] <- -.Machine$double.xmax
+          rankg <- cbind(annot[names(ss), "EntrezID"], ss)
+          fff <- file.path(saveres, "GSEA", "rankings", "CGP", ttt, sprintf("ic50_%s.rnk", gsub("drugid_", "", names(assoc.ic50.cgp)[i])))
+          write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
+          rank.files <- c(rank.files, fff)  
+        }
+        names(rank.files) <- gsub("drugid_", "", names(assoc.ic50.cgp))
+        ## GSEA
+        dir.create(file.path(saveres, "GSEA", "reports", "CGP", ttt), recursive=TRUE, showWarnings=FALSE)
+        gsea.res <- mclapply(1:length(rank.files), function(x, y, z, ...) { 
+        	tt <- gsea.prerank(exe.path=gsea.exec, gmt.path=genesets.filen, rank.path=y[x], gsea.collapse=FALSE, nperm=gsea.nperm, scoring.scheme="weighted", make.sets=TRUE, include.only.symbols=FALSE, plot.top.x=20, set.max=max.geneset.size, set.min=min.geneset.size, zip.report=FALSE, gsea.out=file.path(saveres, "GSEA", "reports", "CGP", ttt), replace.res=FALSE, gsea.seed=987654321)
+          tt <- data.frame("geneset"=rownames(tt), tt[ , -c(1, 2, 3, 12)], "description"=z[rownames(tt)])
+           tt[!is.na(tt[ , "NOM.p.val"]) & tt[ , "NOM.p.val"] == 0, "NOM.p.val"] <- 1 / (gsea.nperm + 1)
+          return(tt)
+        }, y=rank.files, z=genesets$description, gsea.exec=gsea.exec, genesets.filen=genesets.filen2, gsea.nperm=gsea.nperm, max.geneset.size=max.geneset.size, min.geneset.size=min.geneset.size, saveres=saveres)
+        names(gsea.res) <- names(rank.files)
+        ## save all class comparisons into a multisheets xls file
+        WriteXLS::WriteXLS("gsea.res", ExcelFileName=file.path(saveres, sprintf("ic50_cgp_results_gsea_gene_drug_%s.xls", ttt)))
+        gsea.ic50.cgp <- lapply(gsea.res, function(x, y) {
+          rr <- matrix(NA, nrow=length(y), ncol=3, dimnames=list(y, c("nes", "pvalue", "fdr")))
+          rr[as.character(x[ , "geneset"]), ] <- data.matrix(x[ , c("NES", "NOM.p.val", "FDR.q.val")])
+          return(rr)
+        }, y=names(genesets$geneset))
+        message("")
+        save(list=c("gsea.ic50.ccle", "gsea.ic50.cgp"), compress=TRUE, file=myfn)
+        rm(list=c("assoc.ic50.ccle", "assoc.ic50.cgp"))
       }
-      names(rank.files) <- gsub("drugid_", "", names(assoc.ic50.ccle))
-      ## GSEA
-      dir.create(file.path(saveres, "GSEA", "reports", "CCLE", ttt), recursive=TRUE, showWarnings=FALSE)
-      gsea.res <- mclapply(1:length(rank.files), function(x, y, z, ...) { 
-      	tt <- gsea.prerank(exe.path=gsea.exec, gmt.path=genesets.filen, rank.path=y[x], gsea.collapse=FALSE, nperm=gsea.nperm, scoring.scheme="weighted", make.sets=TRUE, include.only.symbols=FALSE, plot.top.x=20, set.max=max.geneset.size, set.min=min.geneset.size, zip.report=FALSE, gsea.out=file.path(saveres, "GSEA", "reports", "CCLE", ttt), replace.res=FALSE, gsea.seed=987654321)
-        tt <- data.frame("geneset"=rownames(tt), tt[ , -c(1, 2, 3, 12)], "description"=z[rownames(tt)])
-        tt[!is.na(tt[ , "NOM.p.val"]) & tt[ , "NOM.p.val"] == 0, "NOM.p.val"] <- 1 / (gsea.nperm + 1)
-        return(tt)
-      }, y=rank.files, z=genesets$description, gsea.exec=gsea.exec, genesets.filen=genesets.filen2, gsea.nperm=gsea.nperm, max.geneset.size=max.geneset.size, min.geneset.size=min.geneset.size, saveres=saveres)
-      names(gsea.res) <- names(rank.files)
-      ## save all class comparisons into a multisheets xls file
-      WriteXLS::WriteXLS("gsea.res", ExcelFileName=file.path(saveres, sprintf("ic50_ccle_results_gsea_gene_drug_%s.xls", ttt)))
-      gsea.ic50.ccle <- lapply(gsea.res, function(x, y) {
-        rr <- matrix(NA, nrow=length(y), ncol=3, dimnames=list(y, c("nes", "pvalue", "fdr")))
-        rr[as.character(x[ , "geneset"]), ] <- data.matrix(x[ , c("NES", "NOM.p.val", "FDR.q.val")])
-        return(rr)
-      }, y=names(genesets$geneset))
-      message("")
-      ## CGP
-      message(sprintf("GSEA based on IC50 in %s (CGP)", ttt))
-      ## create rankings for each drug
-      dir.create(file.path(saveres, "GSEA", "rankings", "CGP", ttt), recursive=TRUE, showWarnings=FALSE)
-      rank.files <- NULL
-      for(i in 1:length(assoc.ic50.cgp)) {
-        ss <- assoc.ic50.cgp[[i]][ , "stat"]
-        ss <- sort(ss, decreasing=TRUE, na.last=NA)
-        ss[ss == Inf] <- .Machine$double.xmax
-        ss[ss == -Inf] <- -.Machine$double.xmax
-        rankg <- cbind(annot[names(ss), "EntrezID"], ss)
-        fff <- file.path(saveres, "GSEA", "rankings", "CGP", ttt, sprintf("ic50_%s.rnk", gsub("drugid_", "", names(assoc.ic50.cgp)[i])))
-        write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
-        rank.files <- c(rank.files, fff)  
-      }
-      names(rank.files) <- gsub("drugid_", "", names(assoc.ic50.cgp))
-      ## GSEA
-      dir.create(file.path(saveres, "GSEA", "reports", "CGP", ttt), recursive=TRUE, showWarnings=FALSE)
-      gsea.res <- mclapply(1:length(rank.files), function(x, y, z, ...) { 
-      	tt <- gsea.prerank(exe.path=gsea.exec, gmt.path=genesets.filen, rank.path=y[x], gsea.collapse=FALSE, nperm=gsea.nperm, scoring.scheme="weighted", make.sets=TRUE, include.only.symbols=FALSE, plot.top.x=20, set.max=max.geneset.size, set.min=min.geneset.size, zip.report=FALSE, gsea.out=file.path(saveres, "GSEA", "reports", "CGP", ttt), replace.res=FALSE, gsea.seed=987654321)
-        tt <- data.frame("geneset"=rownames(tt), tt[ , -c(1, 2, 3, 12)], "description"=z[rownames(tt)])
-         tt[!is.na(tt[ , "NOM.p.val"]) & tt[ , "NOM.p.val"] == 0, "NOM.p.val"] <- 1 / (gsea.nperm + 1)
-        return(tt)
-      }, y=rank.files, z=genesets$description, gsea.exec=gsea.exec, genesets.filen=genesets.filen2, gsea.nperm=gsea.nperm, max.geneset.size=max.geneset.size, min.geneset.size=min.geneset.size, saveres=saveres)
-      names(gsea.res) <- names(rank.files)
-      ## save all class comparisons into a multisheets xls file
-      WriteXLS::WriteXLS("gsea.res", ExcelFileName=file.path(saveres, sprintf("ic50_cgp_results_gsea_gene_drug_%s.xls", ttt)))
-      gsea.ic50.cgp <- lapply(gsea.res, function(x, y) {
-        rr <- matrix(NA, nrow=length(y), ncol=3, dimnames=list(y, c("nes", "pvalue", "fdr")))
-        rr[as.character(x[ , "geneset"]), ] <- data.matrix(x[ , c("NES", "NOM.p.val", "FDR.q.val")])
-        return(rr)
-      }, y=names(genesets$geneset))
-      message("")
-      save(list=c("gsea.ic50.ccle", "gsea.ic50.cgp"), compress=TRUE, file=myfn)
-      rm(list=c("assoc.ic50.ccle", "assoc.ic50.cgp"))
     }
   }
-}
 
-correlations.gsea.stats.ic50.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
-for(ii in 1:length(tissuen)) {
-  myfn <- file.path(saveres, sprintf("gsea_ic50_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
-  if(file.exists(myfn)) {
-    load(myfn)
-    for(i in 1:length(gsea.ic50.ccle)) {
-      nnn <- sum(complete.cases(gsea.ic50.ccle[[i]][ , "nes"], gsea.ic50.cgp[[i]][ , "nes"]))
-      if(nnn >= minsample) {
-        cc <- cor.test(gsea.ic50.ccle[[i]][ , "nes"], gsea.ic50.cgp[[i]][ , "nes"], method="spearman", use="complete.obs", alternative="greater")
-      } else {
-        cc <- list("estimate"=NA, "p.value"=NA)
+  correlations.gsea.stats.ic50.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
+  for(ii in 1:length(tissuen)) {
+    myfn <- file.path(saveres, sprintf("gsea_ic50_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
+    if(file.exists(myfn)) {
+      load(myfn)
+      for(i in 1:length(gsea.ic50.ccle)) {
+        nnn <- sum(complete.cases(gsea.ic50.ccle[[i]][ , "nes"], gsea.ic50.cgp[[i]][ , "nes"]))
+        if(nnn >= minsample) {
+          cc <- cor.test(gsea.ic50.ccle[[i]][ , "nes"], gsea.ic50.cgp[[i]][ , "nes"], method="spearman", use="complete.obs", alternative="greater")
+        } else {
+          cc <- list("estimate"=NA, "p.value"=NA)
+        }
+        ## correlation statistics
+        cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+        correlations.gsea.stats.ic50.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
       }
-      ## correlation statistics
-      cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-      correlations.gsea.stats.ic50.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
     }
   }
-}
 
-correlations.gsea.stats.ic50.signif.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
-for(ii in 1:length(tissuen)) {
-  myfn <- file.path(saveres, sprintf("gsea_ic50_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
-  if(file.exists(myfn)) {
-    load(myfn)
-    for(i in 1:length(gsea.ic50.ccle)) {
-      myx <- gsea.ic50.ccle[[i]][ , "fdr"] < myfdr | gsea.ic50.cgp[[i]][ , "fdr"] < myfdr
-      nnn <- sum(complete.cases(gsea.ic50.ccle[[i]][myx, "nes"], gsea.ic50.cgp[[i]][myx, "nes"]))
-      if(nnn >= minsample) {
-        cc <- cor.test(gsea.ic50.ccle[[i]][myx, "nes"], gsea.ic50.cgp[[i]][myx, "nes"], method="spearman", use="complete.obs", alternative="greater")
-      } else {
-        cc <- list("estimate"=NA, "p.value"=NA)
+  correlations.gsea.stats.ic50.signif.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
+  for(ii in 1:length(tissuen)) {
+    myfn <- file.path(saveres, sprintf("gsea_ic50_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
+    if(file.exists(myfn)) {
+      load(myfn)
+      for(i in 1:length(gsea.ic50.ccle)) {
+        myx <- gsea.ic50.ccle[[i]][ , "fdr"] < myfdr | gsea.ic50.cgp[[i]][ , "fdr"] < myfdr
+        nnn <- sum(complete.cases(gsea.ic50.ccle[[i]][myx, "nes"], gsea.ic50.cgp[[i]][myx, "nes"]))
+        if(nnn >= minsample) {
+          cc <- cor.test(gsea.ic50.ccle[[i]][myx, "nes"], gsea.ic50.cgp[[i]][myx, "nes"], method="spearman", use="complete.obs", alternative="greater")
+        } else {
+          cc <- list("estimate"=NA, "p.value"=NA)
+        }
+        ## correlation statistics
+        cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+        correlations.gsea.stats.ic50.signif.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
       }
-      ## correlation statistics
-      cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-      correlations.gsea.stats.ic50.signif.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
     }
   }
 }
@@ -2383,104 +2396,106 @@ message("")
 dev.off()
 
 ## boxplot for geneset-drug associations based on ic50
-pdf(file.path(saveres, sprintf("boxplot2_gsea_ic50_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
-## correlations for each drug per tissue type
-ll <- c(list("all_tissues"=correlations.gsea.stats[["ic50"]][ , "rho"]), lapply(apply(correlations.gsea.stats.ic50.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-ll[sapply(ll, length) < 3] <- NA
-par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of geneset-drug associations (IC50) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
-ccol <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
-xx <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=1:length(ll))
-points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+if (tissue.specific) {
+  pdf(file.path(saveres, sprintf("boxplot2_gsea_ic50_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
+  ## correlations for each drug per tissue type
+  ll <- c(list("all_tissues"=correlations.gsea.stats[["ic50"]][ , "rho"]), lapply(apply(correlations.gsea.stats.ic50.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of geneset-drug associations (IC50) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
+  ccol <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
+  xx <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=1:length(ll))
+  points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
-cor.diff.test <- NULL
-ll <- c(list("all_tissues"=correlations.gsea.stats[["ic50"]][ , "rho"]), lapply(apply(correlations.gsea.stats.ic50.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ddnn <- names(ll[[1]])
-for(i in 2:length(ll)) {
-  if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
-   wt <- list("estimate"=NA, "p.value"=NA) 
-  } else {
-    wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+  ## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
+  cor.diff.test <- NULL
+  ll <- c(list("all_tissues"=correlations.gsea.stats[["ic50"]][ , "rho"]), lapply(apply(correlations.gsea.stats.ic50.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ddnn <- names(ll[[1]])
+  for(i in 2:length(ll)) {
+    if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
+     wt <- list("estimate"=NA, "p.value"=NA) 
+    } else {
+      wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+    }
+    cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
   }
-  cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
-}
-dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
-# cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
-cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
-myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
-tt <- cor.diff.test[myx, , drop=FALSE]
-tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
-message("Are correlations between pathway-drug associations (IC50) in some tissue types\n significantly higher than in all tissues combined?")
-if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
+  dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
+  # cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
+  cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
+  myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
+  tt <- cor.diff.test[myx, , drop=FALSE]
+  tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
+  message("Are correlations between pathway-drug associations (IC50) in some tissue types\n significantly higher than in all tissues combined?")
+  if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 
-## boxplot for significant geneset-drug associations based on ic50
-pdf(file.path(saveres, sprintf("boxplot2_gsea_ic50_ccle_cgp_signif_tissue_paper.pdf")), height=8, width=14)
-## correlations for each drug per tissue type
-ll <- c(list("all_tissues"=correlations.gsea.stats[["ic50.filt"]][ , "rho"]), lapply(apply(correlations.gsea.stats.ic50.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-ll[sapply(ll, length) < 3] <- NA
-par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main=sprintf("Correlations of geneset-drug associations (IC50) across tissue types (FDR < %i%%)\nCCLE vs. CGP", round(myfdr * 100)), border="grey50", ylim=c(-1, 1), col="white", range=0)
-ccol <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
-xx <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=1:length(ll))
-points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+  ## boxplot for significant geneset-drug associations based on ic50
+  pdf(file.path(saveres, sprintf("boxplot2_gsea_ic50_ccle_cgp_signif_tissue_paper.pdf")), height=8, width=14)
+  ## correlations for each drug per tissue type
+  ll <- c(list("all_tissues"=correlations.gsea.stats[["ic50.filt"]][ , "rho"]), lapply(apply(correlations.gsea.stats.ic50.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main=sprintf("Correlations of geneset-drug associations (IC50) across tissue types (FDR < %i%%)\nCCLE vs. CGP", round(myfdr * 100)), border="grey50", ylim=c(-1, 1), col="white", range=0)
+  ccol <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
+  xx <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=1:length(ll))
+  points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
-cor.diff.test <- NULL
-ll <- c(list("all_tissues"=correlations.gsea.stats[["ic50.filt"]][ , "rho"]), lapply(apply(correlations.gsea.stats.ic50.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ddnn <- names(ll[[1]])
-for(i in 2:length(ll)) {
-  if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
-   wt <- list("estimate"=NA, "p.value"=NA) 
-  } else {
-    wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+  ## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
+  cor.diff.test <- NULL
+  ll <- c(list("all_tissues"=correlations.gsea.stats[["ic50.filt"]][ , "rho"]), lapply(apply(correlations.gsea.stats.ic50.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ddnn <- names(ll[[1]])
+  for(i in 2:length(ll)) {
+    if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
+     wt <- list("estimate"=NA, "p.value"=NA) 
+    } else {
+      wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+    }
+    cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
   }
-  cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
+  dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
+  # cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
+  cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
+  myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
+  tt <- cor.diff.test[myx, , drop=FALSE]
+  tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
+  message("Are correlations between significant pathway-drug associations (IC50) in some tissue types\n significantly higher than in all tissues combined?")
+  if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 }
-dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
-# cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
-cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
-myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
-tt <- cor.diff.test[myx, , drop=FALSE]
-tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
-message("Are correlations between significant pathway-drug associations (IC50) in some tissue types\n significantly higher than in all tissues combined?")
-if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 
 ########################
 ## IC50 sensitivity calling
@@ -2604,121 +2619,123 @@ dev.off()
 
 ########################
 ## AUC per tissue types
-for(ii in 1:length(tissuen)) {
-  ttt <- toupper(gsub(badchars, "", tissuen[ii]))
-  myfn <- file.path(saveres, sprintf("gsea_auc_cgp_ccle_%s.RData", ttt))
-  if(!file.exists(myfn)) {
-    myfn2 <- file.path(saveres, sprintf("assoc_auc_cgp_ccle_%s.RData", ttt))
-    if(file.exists(myfn2)) {
-      ## load gene-drug associations for a specific tissue type
-      load(myfn2)
-      ## CCLE
-      message(sprintf("GSEA based on AUC in %s (CCLE)", ttt))
-      ## create rankings for each drug
-      dir.create(file.path(saveres, "GSEA", "rankings", "CCLE", ttt), recursive=TRUE, showWarnings=FALSE)
-      rank.files <- NULL
-      for(i in 1:length(assoc.auc.ccle)) {
-        ss <- assoc.auc.ccle[[i]][ , "stat"]
-        ss <- sort(ss, decreasing=TRUE, na.last=NA)
-        ss[ss == Inf] <- .Machine$double.xmax
-        ss[ss == -Inf] <- -.Machine$double.xmax
-        rankg <- cbind(annot[names(ss), "EntrezID"], ss)
-        fff <- file.path(saveres, "GSEA", "rankings", "CCLE", ttt, sprintf("auc_%s.rnk", gsub("drugid_", "", names(assoc.auc.ccle)[i])))
-        write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
-        rank.files <- c(rank.files, fff)  
+if (tissue.specific) {
+  for(ii in 1:length(tissuen)) {
+    ttt <- toupper(gsub(badchars, "", tissuen[ii]))
+    myfn <- file.path(saveres, sprintf("gsea_auc_cgp_ccle_%s.RData", ttt))
+    if(!file.exists(myfn)) {
+      myfn2 <- file.path(saveres, sprintf("assoc_auc_cgp_ccle_%s.RData", ttt))
+      if(file.exists(myfn2)) {
+        ## load gene-drug associations for a specific tissue type
+        load(myfn2)
+        ## CCLE
+        message(sprintf("GSEA based on AUC in %s (CCLE)", ttt))
+        ## create rankings for each drug
+        dir.create(file.path(saveres, "GSEA", "rankings", "CCLE", ttt), recursive=TRUE, showWarnings=FALSE)
+        rank.files <- NULL
+        for(i in 1:length(assoc.auc.ccle)) {
+          ss <- assoc.auc.ccle[[i]][ , "stat"]
+          ss <- sort(ss, decreasing=TRUE, na.last=NA)
+          ss[ss == Inf] <- .Machine$double.xmax
+          ss[ss == -Inf] <- -.Machine$double.xmax
+          rankg <- cbind(annot[names(ss), "EntrezID"], ss)
+          fff <- file.path(saveres, "GSEA", "rankings", "CCLE", ttt, sprintf("auc_%s.rnk", gsub("drugid_", "", names(assoc.auc.ccle)[i])))
+          write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
+          rank.files <- c(rank.files, fff)  
+        }
+        names(rank.files) <- gsub("drugid_", "", names(assoc.auc.ccle))
+        ## GSEA
+        dir.create(file.path(saveres, "GSEA", "reports", "CCLE", ttt), recursive=TRUE, showWarnings=FALSE)
+        gsea.res <- mclapply(1:length(rank.files), function(x, y, z, ...) { 
+        	tt <- gsea.prerank(exe.path=gsea.exec, gmt.path=genesets.filen, rank.path=y[x], gsea.collapse=FALSE, nperm=gsea.nperm, scoring.scheme="weighted", make.sets=TRUE, include.only.symbols=FALSE, plot.top.x=20, set.max=max.geneset.size, set.min=min.geneset.size, zip.report=FALSE, gsea.out=file.path(saveres, "GSEA", "reports", "CCLE", ttt), replace.res=FALSE, gsea.seed=987654321)
+          tt <- data.frame("geneset"=rownames(tt), tt[ , -c(1, 2, 3, 12)], "description"=z[rownames(tt)])
+          tt[!is.na(tt[ , "NOM.p.val"]) & tt[ , "NOM.p.val"] == 0, "NOM.p.val"] <- 1 / (gsea.nperm + 1)
+          return(tt)
+        }, y=rank.files, z=genesets$description, gsea.exec=gsea.exec, genesets.filen=genesets.filen2, gsea.nperm=gsea.nperm, max.geneset.size=max.geneset.size, min.geneset.size=min.geneset.size, saveres=saveres)
+        names(gsea.res) <- names(rank.files)
+        ## save all class comparisons into a multisheets xls file
+        WriteXLS::WriteXLS("gsea.res", ExcelFileName=file.path(saveres, sprintf("auc_ccle_results_gsea_gene_drug_%s.xls", ttt)))
+        gsea.auc.ccle <- lapply(gsea.res, function(x, y) {
+          rr <- matrix(NA, nrow=length(y), ncol=3, dimnames=list(y, c("nes", "pvalue", "fdr")))
+          rr[as.character(x[ , "geneset"]), ] <- data.matrix(x[ , c("NES", "NOM.p.val", "FDR.q.val")])
+          return(rr)
+        }, y=names(genesets$geneset))
+        message("")
+        ## CGP
+        message(sprintf("GSEA based on AUC in %s (CGP)", ttt))
+        ## create rankings for each drug
+        dir.create(file.path(saveres, "GSEA", "rankings", "CGP", ttt), recursive=TRUE, showWarnings=FALSE)
+        rank.files <- NULL
+        for(i in 1:length(assoc.auc.cgp)) {
+          ss <- assoc.auc.cgp[[i]][ , "stat"]
+          ss <- sort(ss, decreasing=TRUE, na.last=NA)
+          ss[ss == Inf] <- .Machine$double.xmax
+          ss[ss == -Inf] <- -.Machine$double.xmax
+          rankg <- cbind(annot[names(ss), "EntrezID"], ss)
+          fff <- file.path(saveres, "GSEA", "rankings", "CGP", ttt, sprintf("auc_%s.rnk", gsub("drugid_", "", names(assoc.auc.cgp)[i])))
+          write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
+          rank.files <- c(rank.files, fff)  
+        }
+        names(rank.files) <- gsub("drugid_", "", names(assoc.auc.cgp))
+        ## GSEA
+        dir.create(file.path(saveres, "GSEA", "reports", "CGP", ttt), recursive=TRUE, showWarnings=FALSE)
+        gsea.res <- mclapply(1:length(rank.files), function(x, y, z, ...) { 
+        	tt <- gsea.prerank(exe.path=gsea.exec, gmt.path=genesets.filen, rank.path=y[x], gsea.collapse=FALSE, nperm=gsea.nperm, scoring.scheme="weighted", make.sets=TRUE, include.only.symbols=FALSE, plot.top.x=20, set.max=max.geneset.size, set.min=min.geneset.size, zip.report=FALSE, gsea.out=file.path(saveres, "GSEA", "reports", "CGP", ttt), replace.res=FALSE, gsea.seed=987654321)
+          tt <- data.frame("geneset"=rownames(tt), tt[ , -c(1, 2, 3, 12)], "description"=z[rownames(tt)])
+           tt[!is.na(tt[ , "NOM.p.val"]) & tt[ , "NOM.p.val"] == 0, "NOM.p.val"] <- 1 / (gsea.nperm + 1)
+          return(tt)
+        }, y=rank.files, z=genesets$description, gsea.exec=gsea.exec, genesets.filen=genesets.filen2, gsea.nperm=gsea.nperm, max.geneset.size=max.geneset.size, min.geneset.size=min.geneset.size, saveres=saveres)
+        names(gsea.res) <- names(rank.files)
+        ## save all class comparisons into a multisheets xls file
+        WriteXLS::WriteXLS("gsea.res", ExcelFileName=file.path(saveres, sprintf("auc_cgp_results_gsea_gene_drug_%s.xls", ttt)))
+        gsea.auc.cgp <- lapply(gsea.res, function(x, y) {
+          rr <- matrix(NA, nrow=length(y), ncol=3, dimnames=list(y, c("nes", "pvalue", "fdr")))
+          rr[as.character(x[ , "geneset"]), ] <- data.matrix(x[ , c("NES", "NOM.p.val", "FDR.q.val")])
+          return(rr)
+        }, y=names(genesets$geneset))
+        message("")
+        save(list=c("gsea.auc.ccle", "gsea.auc.cgp"), compress=TRUE, file=myfn)
+        rm(list=c("assoc.auc.ccle", "assoc.auc.cgp"))
       }
-      names(rank.files) <- gsub("drugid_", "", names(assoc.auc.ccle))
-      ## GSEA
-      dir.create(file.path(saveres, "GSEA", "reports", "CCLE", ttt), recursive=TRUE, showWarnings=FALSE)
-      gsea.res <- mclapply(1:length(rank.files), function(x, y, z, ...) { 
-      	tt <- gsea.prerank(exe.path=gsea.exec, gmt.path=genesets.filen, rank.path=y[x], gsea.collapse=FALSE, nperm=gsea.nperm, scoring.scheme="weighted", make.sets=TRUE, include.only.symbols=FALSE, plot.top.x=20, set.max=max.geneset.size, set.min=min.geneset.size, zip.report=FALSE, gsea.out=file.path(saveres, "GSEA", "reports", "CCLE", ttt), replace.res=FALSE, gsea.seed=987654321)
-        tt <- data.frame("geneset"=rownames(tt), tt[ , -c(1, 2, 3, 12)], "description"=z[rownames(tt)])
-        tt[!is.na(tt[ , "NOM.p.val"]) & tt[ , "NOM.p.val"] == 0, "NOM.p.val"] <- 1 / (gsea.nperm + 1)
-        return(tt)
-      }, y=rank.files, z=genesets$description, gsea.exec=gsea.exec, genesets.filen=genesets.filen2, gsea.nperm=gsea.nperm, max.geneset.size=max.geneset.size, min.geneset.size=min.geneset.size, saveres=saveres)
-      names(gsea.res) <- names(rank.files)
-      ## save all class comparisons into a multisheets xls file
-      WriteXLS::WriteXLS("gsea.res", ExcelFileName=file.path(saveres, sprintf("auc_ccle_results_gsea_gene_drug_%s.xls", ttt)))
-      gsea.auc.ccle <- lapply(gsea.res, function(x, y) {
-        rr <- matrix(NA, nrow=length(y), ncol=3, dimnames=list(y, c("nes", "pvalue", "fdr")))
-        rr[as.character(x[ , "geneset"]), ] <- data.matrix(x[ , c("NES", "NOM.p.val", "FDR.q.val")])
-        return(rr)
-      }, y=names(genesets$geneset))
-      message("")
-      ## CGP
-      message(sprintf("GSEA based on AUC in %s (CGP)", ttt))
-      ## create rankings for each drug
-      dir.create(file.path(saveres, "GSEA", "rankings", "CGP", ttt), recursive=TRUE, showWarnings=FALSE)
-      rank.files <- NULL
-      for(i in 1:length(assoc.auc.cgp)) {
-        ss <- assoc.auc.cgp[[i]][ , "stat"]
-        ss <- sort(ss, decreasing=TRUE, na.last=NA)
-        ss[ss == Inf] <- .Machine$double.xmax
-        ss[ss == -Inf] <- -.Machine$double.xmax
-        rankg <- cbind(annot[names(ss), "EntrezID"], ss)
-        fff <- file.path(saveres, "GSEA", "rankings", "CGP", ttt, sprintf("auc_%s.rnk", gsub("drugid_", "", names(assoc.auc.cgp)[i])))
-        write.table(rankg, file=fff, col.names=FALSE, row.names=FALSE, sep="\t", quote=FALSE)
-        rank.files <- c(rank.files, fff)  
-      }
-      names(rank.files) <- gsub("drugid_", "", names(assoc.auc.cgp))
-      ## GSEA
-      dir.create(file.path(saveres, "GSEA", "reports", "CGP", ttt), recursive=TRUE, showWarnings=FALSE)
-      gsea.res <- mclapply(1:length(rank.files), function(x, y, z, ...) { 
-      	tt <- gsea.prerank(exe.path=gsea.exec, gmt.path=genesets.filen, rank.path=y[x], gsea.collapse=FALSE, nperm=gsea.nperm, scoring.scheme="weighted", make.sets=TRUE, include.only.symbols=FALSE, plot.top.x=20, set.max=max.geneset.size, set.min=min.geneset.size, zip.report=FALSE, gsea.out=file.path(saveres, "GSEA", "reports", "CGP", ttt), replace.res=FALSE, gsea.seed=987654321)
-        tt <- data.frame("geneset"=rownames(tt), tt[ , -c(1, 2, 3, 12)], "description"=z[rownames(tt)])
-         tt[!is.na(tt[ , "NOM.p.val"]) & tt[ , "NOM.p.val"] == 0, "NOM.p.val"] <- 1 / (gsea.nperm + 1)
-        return(tt)
-      }, y=rank.files, z=genesets$description, gsea.exec=gsea.exec, genesets.filen=genesets.filen2, gsea.nperm=gsea.nperm, max.geneset.size=max.geneset.size, min.geneset.size=min.geneset.size, saveres=saveres)
-      names(gsea.res) <- names(rank.files)
-      ## save all class comparisons into a multisheets xls file
-      WriteXLS::WriteXLS("gsea.res", ExcelFileName=file.path(saveres, sprintf("auc_cgp_results_gsea_gene_drug_%s.xls", ttt)))
-      gsea.auc.cgp <- lapply(gsea.res, function(x, y) {
-        rr <- matrix(NA, nrow=length(y), ncol=3, dimnames=list(y, c("nes", "pvalue", "fdr")))
-        rr[as.character(x[ , "geneset"]), ] <- data.matrix(x[ , c("NES", "NOM.p.val", "FDR.q.val")])
-        return(rr)
-      }, y=names(genesets$geneset))
-      message("")
-      save(list=c("gsea.auc.ccle", "gsea.auc.cgp"), compress=TRUE, file=myfn)
-      rm(list=c("assoc.auc.ccle", "assoc.auc.cgp"))
     }
   }
-}
 
-correlations.gsea.stats.auc.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
-for(ii in 1:length(tissuen)) {
-  myfn <- file.path(saveres, sprintf("gsea_auc_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
-  if(file.exists(myfn)) {
-    load(myfn)
-    for(i in 1:length(gsea.auc.ccle)) {
-      nnn <- sum(complete.cases(gsea.auc.ccle[[i]][ , "nes"], gsea.auc.cgp[[i]][ , "nes"]))
-      if(nnn >= minsample) {
-        cc <- cor.test(gsea.auc.ccle[[i]][ , "nes"], gsea.auc.cgp[[i]][ , "nes"], method="spearman", use="complete.obs", alternative="greater")
-      } else {
-        cc <- list("estimate"=NA, "p.value"=NA)
+  correlations.gsea.stats.auc.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
+  for(ii in 1:length(tissuen)) {
+    myfn <- file.path(saveres, sprintf("gsea_auc_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
+    if(file.exists(myfn)) {
+      load(myfn)
+      for(i in 1:length(gsea.auc.ccle)) {
+        nnn <- sum(complete.cases(gsea.auc.ccle[[i]][ , "nes"], gsea.auc.cgp[[i]][ , "nes"]))
+        if(nnn >= minsample) {
+          cc <- cor.test(gsea.auc.ccle[[i]][ , "nes"], gsea.auc.cgp[[i]][ , "nes"], method="spearman", use="complete.obs", alternative="greater")
+        } else {
+          cc <- list("estimate"=NA, "p.value"=NA)
+        }
+        ## correlation statistics
+        cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+        correlations.gsea.stats.auc.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
       }
-      ## correlation statistics
-      cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-      correlations.gsea.stats.auc.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
     }
   }
-}
 
-correlations.gsea.stats.auc.signif.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
-for(ii in 1:length(tissuen)) {
-  myfn <- file.path(saveres, sprintf("gsea_auc_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
-  if(file.exists(myfn)) {
-    load(myfn)
-    for(i in 1:length(gsea.auc.ccle)) {
-      myx <- gsea.auc.ccle[[i]][ , "fdr"] < myfdr | gsea.auc.cgp[[i]][ , "fdr"] < myfdr
-      nnn <- sum(complete.cases(gsea.auc.ccle[[i]][myx, "nes"], gsea.auc.cgp[[i]][myx, "nes"]))
-      if(nnn >= minsample) {
-        cc <- cor.test(gsea.auc.ccle[[i]][myx, "nes"], gsea.auc.cgp[[i]][myx, "nes"], method="spearman", use="complete.obs", alternative="greater")
-      } else {
-        cc <- list("estimate"=NA, "p.value"=NA)
+  correlations.gsea.stats.auc.signif.tissue <- array(NA, dim=c(length(tissuen), length(drugn), 5), dimnames=list(tissuen, gsub("drugid_", "", drugn), c("rho", "upper", "lower", "p", "n")))
+  for(ii in 1:length(tissuen)) {
+    myfn <- file.path(saveres, sprintf("gsea_auc_cgp_ccle_%s.RData", toupper(gsub(badchars, "", tissuen[ii]))))
+    if(file.exists(myfn)) {
+      load(myfn)
+      for(i in 1:length(gsea.auc.ccle)) {
+        myx <- gsea.auc.ccle[[i]][ , "fdr"] < myfdr | gsea.auc.cgp[[i]][ , "fdr"] < myfdr
+        nnn <- sum(complete.cases(gsea.auc.ccle[[i]][myx, "nes"], gsea.auc.cgp[[i]][myx, "nes"]))
+        if(nnn >= minsample) {
+          cc <- cor.test(gsea.auc.ccle[[i]][myx, "nes"], gsea.auc.cgp[[i]][myx, "nes"], method="spearman", use="complete.obs", alternative="greater")
+        } else {
+          cc <- list("estimate"=NA, "p.value"=NA)
+        }
+        ## correlation statistics
+        cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
+        correlations.gsea.stats.auc.signif.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
       }
-      ## correlation statistics
-      cci <- spearmanCI(x=cc$estimate, n=nnn, alpha=0.05)
-      correlations.gsea.stats.auc.signif.tissue[ii, i, ] <- c(cc$estimate, cci[1], cci[2], cc$p.value, nnn)
     }
   }
 }
@@ -2845,106 +2862,107 @@ for(i in 1:length(gsea.auc.ccle)) {
 message("")
 dev.off()
 
+if (tissue.specific) {
+  ## boxplot for geneset-drug associations based on auc
+  pdf(file.path(saveres, sprintf("boxplot2_gsea_auc_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
+  ## correlations for each drug per tissue type
+  ll <- c(list("all_tissues"=correlations.gsea.stats[["auc"]][ , "rho"]), lapply(apply(correlations.gsea.stats.auc.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of geneset-drug associations (AUC) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
+  ccol <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
+  xx <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=1:length(ll))
+  points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## boxplot for geneset-drug associations based on auc
-pdf(file.path(saveres, sprintf("boxplot2_gsea_auc_ccle_cgp_tissue_paper.pdf")), height=8, width=14)
-## correlations for each drug per tissue type
-ll <- c(list("all_tissues"=correlations.gsea.stats[["auc"]][ , "rho"]), lapply(apply(correlations.gsea.stats.auc.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-ll[sapply(ll, length) < 3] <- NA
-par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main="Correlations of geneset-drug associations (AUC) across tissue types\nCCLE vs. CGP", border="grey50", ylim=c(-1, 1), col="white", range=0)
-ccol <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
-xx <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=1:length(ll))
-points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
-
-## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
-cor.diff.test <- NULL
-ll <- c(list("all_tissues"=correlations.gsea.stats[["auc"]][ , "rho"]), lapply(apply(correlations.gsea.stats.auc.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ddnn <- names(ll[[1]])
-for(i in 2:length(ll)) {
-  if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
-   wt <- list("estimate"=NA, "p.value"=NA) 
-  } else {
-    wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+  ## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
+  cor.diff.test <- NULL
+  ll <- c(list("all_tissues"=correlations.gsea.stats[["auc"]][ , "rho"]), lapply(apply(correlations.gsea.stats.auc.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ddnn <- names(ll[[1]])
+  for(i in 2:length(ll)) {
+    if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
+     wt <- list("estimate"=NA, "p.value"=NA) 
+    } else {
+      wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+    }
+    cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
   }
-  cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
-}
-dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
-# cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
-cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
-myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
-tt <- cor.diff.test[myx, , drop=FALSE]
-tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
-message("Are correlations between pathway-drug associations (AUC) in some tissue types\n significantly higher than in all tissues combined?")
-if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
+  dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
+  # cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
+  cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
+  myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
+  tt <- cor.diff.test[myx, , drop=FALSE]
+  tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
+  message("Are correlations between pathway-drug associations (AUC) in some tissue types\n significantly higher than in all tissues combined?")
+  if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 
-## boxplot for significant geneset-drug associations based on auc
-pdf(file.path(saveres, sprintf("boxplot2_gsea_auc_ccle_cgp_signif_tissue_paper.pdf")), height=8, width=14)
-## correlations for each drug per tissue type
-ll <- c(list("all_tissues"=correlations.gsea.stats[["auc.filt"]][ , "rho"]), lapply(apply(correlations.gsea.stats.auc.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
-# ll <- ll[sapply(ll, length) > 0]
-myx <- which(sapply(ll, length) < 3)
-wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
-ll[sapply(ll, length) < 3] <- NA
-par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
-mp <- boxplot(ll, outline=FALSE, ylab="Rs", main=sprintf("Correlations of geneset-drug associations (AUC) across tissue types (FDR < %i%%)\nCCLE vs. CGP", round(myfdr * 100)), border="grey50", ylim=c(-1, 1), col="white", range=0)
-ccol <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
-xx <- mapply(FUN=function(x, y) {
-    if(x > 0) {
-      res <- rep(y, each=x)
-    } else { res <- NA }
-    return(res)
-  }, x=sapply(ll, length), y=1:length(ll))
-points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
-axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
-text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
-legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
-dev.off()
+  ## boxplot for significant geneset-drug associations based on auc
+  pdf(file.path(saveres, sprintf("boxplot2_gsea_auc_ccle_cgp_signif_tissue_paper.pdf")), height=8, width=14)
+  ## correlations for each drug per tissue type
+  ll <- c(list("all_tissues"=correlations.gsea.stats[["auc.filt"]][ , "rho"]), lapply(apply(correlations.gsea.stats.auc.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ll <- lapply(ll, function(x) { return(x[!is.na(x)]) })
+  # ll <- ll[sapply(ll, length) > 0]
+  myx <- which(sapply(ll, length) < 3)
+  wt <- kruskal.test(x=ll[sapply(ll, length) > 0])
+  ll[sapply(ll, length) < 3] <- NA
+  par(las=1, mar=c(12, 4, 4, 2) + 0.1, xaxt="n")
+  mp <- boxplot(ll, outline=FALSE, ylab="Rs", main=sprintf("Correlations of geneset-drug associations (AUC) across tissue types (FDR < %i%%)\nCCLE vs. CGP", round(myfdr * 100)), border="grey50", ylim=c(-1, 1), col="white", range=0)
+  ccol <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=c("lightgrey", coltissuet))
+  xx <- mapply(FUN=function(x, y) {
+      if(x > 0) {
+        res <- rep(y, each=x)
+      } else { res <- NA }
+      return(res)
+    }, x=sapply(ll, length), y=1:length(ll))
+  points(x=jitter(unlist(xx), 1), y=unlist(ll), cex=1.25, pch=20, col=unlist(ccol))
+  axis(1, at=1:length(mp$names), tick=TRUE, labels=T)
+  text(x=1:length(mp$names), y=par("usr")[3] - (par("usr")[4] * 0.025), pos=2, labels=mp$names, srt=45, xpd=NA, font=2, col=c("black", coltissuet))
+  legend("topright", legend=sprintf("Kruskal-Wallis test p-value=%.1E", wt$p.value), bty="n")
+  dev.off()
 
-## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
-cor.diff.test <- NULL
-ll <- c(list("all_tissues"=correlations.gsea.stats[["auc.filt"]][ , "rho"]), lapply(apply(correlations.gsea.stats.auc.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
-ddnn <- names(ll[[1]])
-for(i in 2:length(ll)) {
-  if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
-   wt <- list("estimate"=NA, "p.value"=NA) 
-  } else {
-    wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+  ## test whether correlations are significantly higher in specific tissue types compared to all tissues combined
+  cor.diff.test <- NULL
+  ll <- c(list("all_tissues"=correlations.gsea.stats[["auc.filt"]][ , "rho"]), lapply(apply(correlations.gsea.stats.auc.signif.tissue[ , , "rho"], 1, list), function(x) { return(x[[1]]) }))
+  ddnn <- names(ll[[1]])
+  for(i in 2:length(ll)) {
+    if(sum(complete.cases(ll[[1]], y=ll[[i]])) < 3) {
+     wt <- list("estimate"=NA, "p.value"=NA) 
+    } else {
+      wt <- wilcox.test(x=ll[[1]], y=ll[[i]], alternative="less", conf.int=TRUE)
+    }
+    cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
   }
-  cor.diff.test <- rbind(cor.diff.test, c(wt$estimate, wt$p.value))
+  dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
+  # cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
+  cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
+  myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
+  tt <- cor.diff.test[myx, , drop=FALSE]
+  tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
+  message("Are correlations between significant pathway-drug associations (AUC) in some tissue types\n significantly higher than in all tissues combined?")
+  if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 }
-dimnames(cor.diff.test) <- list(names(ll)[-1], c("difference", "p"))
-# cor.diff.test <- cbind(cor.diff.test, "lfdr"=fdrtool::fdrtool(cor.diff.test[ , 2], statistic="pvalue", verbose=FALSE)$lfdr)
-cor.diff.test <- cbind(cor.diff.test, "fdr"=p.adjust(cor.diff.test[ , "p"], method="fdr"))
-myx <- complete.cases(cor.diff.test) & (cor.diff.test[ , "p"] < 0.05 | cor.diff.test[ , "fdr"] < myfdr)
-tt <- cor.diff.test[myx, , drop=FALSE]
-tt <- tt[order(tt[ , "p"], decreasing=FALSE), , drop=FALSE]
-message("Are correlations between significant pathway-drug associations (AUC) in some tissue types\n significantly higher than in all tissues combined?")
-if(nrow(tt) == 0) { message("\t-> none") } else { print(tt) }
 
 ########################
 ## AUC sensitivity calling
@@ -3077,191 +3095,193 @@ WriteXLS::WriteXLS("savecor", ExcelFileName=file.path(saveres, "correlations_gse
 
 
 save(list=c("correlations", "correlations.gsea.stats"), compress=TRUE, file=file.path(saveres, "correlations_gsea_stats.RData"))
-save(list=c("correlations.gsea.stats.ic50.tissue", "correlations.gsea.stats.auc.tissue", "correlations.gsea.stats.ic50.signif.tissue", "correlations.gsea.stats.auc.signif.tissue"), compress=TRUE, file=file.path(saveres, "correlations_gsea_stats_tissue.RData"))
+if (tissue.specific) {
+  save(list=c("correlations.gsea.stats.ic50.tissue", "correlations.gsea.stats.auc.tissue", "correlations.gsea.stats.ic50.signif.tissue", "correlations.gsea.stats.auc.signif.tissue"), compress=TRUE, file=file.path(saveres, "correlations_gsea_stats_tissue.RData"))
 
-## barplot for geneset-drug associations across tissue types
-pdf(file.path(saveres, "barplot_gsea_ic50_auc_tissue_cgp_ccle.pdf"), height=6, width=6)
-for(ii in 1:length(tissuen)) {
-  ncelline <- sum(tissue == tissuen[ii])
-  if(max(correlations.gsea.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.gsea.stats.ic50.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
-    ## IC50
-    xx <- correlations.gsea.stats.ic50.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.gsea.stats.ic50.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.gsea.stats.ic50.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.gsea.stats.ic50.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.ic50.tissue)[[2]]
-    cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    ## AUC
-    xx <- correlations.gsea.stats.auc.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.gsea.stats.auc.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.gsea.stats.auc.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.gsea.stats.auc.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.auc.tissue)[[2]]
-    cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
-    # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-    yylim <- c(0, 1)
-    mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Pathway-drug associations (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
-    # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-    # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-    axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-    text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-    text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-  }
-}
-dev.off()
-
-## multiple barplots per page
-count <- 0
-nf <- 6
-for(ii in 1:length(tissuen)) {
-  ncelline <- sum(tissue == tissuen[ii])
-  if(max(correlations.gsea.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.gsea.stats.ic50.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
-    count <- count + 1
-    ## IC50
-    xx <- correlations.gsea.stats.ic50.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.gsea.stats.ic50.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.gsea.stats.ic50.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.gsea.stats.ic50.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.ic50.tissue)[[2]]
-    cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    ## AUC
-    xx <- correlations.gsea.stats.auc.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.gsea.stats.auc.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.gsea.stats.auc.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.gsea.stats.auc.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.auc.tissue)[[2]]
-    cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    if((count %% nf) == 1) {
-      pdf(file.path(saveres, sprintf("barplot_gsea_ic50_auc_tissue%i_cgp_ccle_paper.pdf", ceiling(count / nf))), height=14, width=10)
-      par(las=1, mar=c(6, 4, 6, 0), xaxt="n", mfrow=c(3, 2))
+  ## barplot for geneset-drug associations across tissue types
+  pdf(file.path(saveres, "barplot_gsea_ic50_auc_tissue_cgp_ccle.pdf"), height=6, width=6)
+  for(ii in 1:length(tissuen)) {
+    ncelline <- sum(tissue == tissuen[ii])
+    if(max(correlations.gsea.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.gsea.stats.ic50.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
+      ## IC50
+      xx <- correlations.gsea.stats.ic50.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.gsea.stats.ic50.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.gsea.stats.ic50.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.gsea.stats.ic50.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.ic50.tissue)[[2]]
+      cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      ## AUC
+      xx <- correlations.gsea.stats.auc.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.gsea.stats.auc.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.gsea.stats.auc.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.gsea.stats.auc.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.auc.tissue)[[2]]
+      cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
+      # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
+      yylim <- c(0, 1)
+      mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Pathway-drug associations (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
+      # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
+      # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
+      axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
+      text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
+      text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
     }
-    # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-    yylim <- c(0, 1)
-    mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Pathway-drug associations (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
-    legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-    # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-    axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-    text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-    text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    if((count %% nf) == 0) { dev.off() }
   }
-}
-if((count %% nf) != 0) { dev.off() }
+  dev.off()
 
-## barplot for significant geneset-drug associations across tissue types
-pdf(file.path(saveres, "barplot_gsea_ic50_auc_signif_tissue_cgp_ccle.pdf"), height=6, width=6)
-for(ii in 1:length(tissuen)) {
-  ncelline <- sum(tissue == tissuen[ii])
-  if(max(correlations.gsea.stats.ic50.signif.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.gsea.stats.ic50.signif.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
-    ## IC50
-    xx <- correlations.gsea.stats.ic50.signif.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.gsea.stats.ic50.signif.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.gsea.stats.ic50.signif.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.gsea.stats.ic50.signif.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.ic50.signif.tissue)[[2]]
-    cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    ## AUC
-    xx <- correlations.gsea.stats.auc.signif.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.gsea.stats.auc.signif.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.gsea.stats.auc.signif.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.gsea.stats.auc.signif.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.auc.signif.tissue)[[2]]
-    cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
-    # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-    yylim <- c(0, 1)
-    mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Pathway-drug associations (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
-    # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-    # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-    axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-    text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-    text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-  }
-}
-dev.off()
-
-## multiple barplots per page
-count <- 0
-nf <- 6
-for(ii in 1:length(tissuen)) {
-  ncelline <- sum(tissue == tissuen[ii])
-  if(max(correlations.gsea.stats.ic50.signif.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.gsea.stats.ic50.signif.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
-    count <- count + 1
-    ## IC50
-    xx <- correlations.gsea.stats.ic50.signif.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.gsea.stats.ic50.signif.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.gsea.stats.ic50.signif.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.gsea.stats.ic50.signif.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.ic50.signif.tissue)[[2]]
-    cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    ## AUC
-    xx <- correlations.gsea.stats.auc.signif.tissue[ii, , "rho"]
-    xx[!is.na(xx) & xx < 0] <- 0
-    ll <- correlations.gsea.stats.auc.signif.tissue[ii, , "lower"]
-    ll[!is.na(ll) & ll < 0] <- 0
-    uu <- correlations.gsea.stats.auc.signif.tissue[ii, , "upper"]
-    uu[!is.na(uu) & uu < 0] <- 0
-    uu[!is.na(uu) & uu > 1] <- 1
-    pp <- correlations.gsea.stats.auc.signif.tissue[ii, , "p"]
-    pp[xx == 0] <- 1
-    names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.auc.signif.tissue)[[2]]
-    cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-    if((count %% nf) == 1) {
-      pdf(file.path(saveres, sprintf("barplot_gsea_ic50_auc_signif_tissue%i_cgp_ccle_paper.pdf", ceiling(count / nf))), height=14, width=10)
-      par(las=1, mar=c(6, 4, 6, 0), xaxt="n", mfrow=c(3, 2))
+  ## multiple barplots per page
+  count <- 0
+  nf <- 6
+  for(ii in 1:length(tissuen)) {
+    ncelline <- sum(tissue == tissuen[ii])
+    if(max(correlations.gsea.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.gsea.stats.ic50.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
+      count <- count + 1
+      ## IC50
+      xx <- correlations.gsea.stats.ic50.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.gsea.stats.ic50.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.gsea.stats.ic50.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.gsea.stats.ic50.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.ic50.tissue)[[2]]
+      cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      ## AUC
+      xx <- correlations.gsea.stats.auc.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.gsea.stats.auc.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.gsea.stats.auc.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.gsea.stats.auc.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.auc.tissue)[[2]]
+      cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      if((count %% nf) == 1) {
+        pdf(file.path(saveres, sprintf("barplot_gsea_ic50_auc_tissue%i_cgp_ccle_paper.pdf", ceiling(count / nf))), height=14, width=10)
+        par(las=1, mar=c(6, 4, 6, 0), xaxt="n", mfrow=c(3, 2))
+      }
+      # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
+      yylim <- c(0, 1)
+      mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Pathway-drug associations (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
+      legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
+      # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
+      axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
+      text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
+      text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      if((count %% nf) == 0) { dev.off() }
     }
-    # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-    yylim <- c(0, 1)
-    mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Pathway-drug associations (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
-    legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-    # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-    axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-    text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-    text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-    if((count %% nf) == 0) { dev.off() }
   }
+  if((count %% nf) != 0) { dev.off() }
+
+  ## barplot for significant geneset-drug associations across tissue types
+  pdf(file.path(saveres, "barplot_gsea_ic50_auc_signif_tissue_cgp_ccle.pdf"), height=6, width=6)
+  for(ii in 1:length(tissuen)) {
+    ncelline <- sum(tissue == tissuen[ii])
+    if(max(correlations.gsea.stats.ic50.signif.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.gsea.stats.ic50.signif.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
+      ## IC50
+      xx <- correlations.gsea.stats.ic50.signif.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.gsea.stats.ic50.signif.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.gsea.stats.ic50.signif.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.gsea.stats.ic50.signif.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.ic50.signif.tissue)[[2]]
+      cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      ## AUC
+      xx <- correlations.gsea.stats.auc.signif.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.gsea.stats.auc.signif.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.gsea.stats.auc.signif.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.gsea.stats.auc.signif.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.auc.signif.tissue)[[2]]
+      cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
+      # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
+      yylim <- c(0, 1)
+      mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Pathway-drug associations (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
+      # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
+      # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
+      axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
+      text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
+      text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+    }
+  }
+  dev.off()
+
+  ## multiple barplots per page
+  count <- 0
+  nf <- 6
+  for(ii in 1:length(tissuen)) {
+    ncelline <- sum(tissue == tissuen[ii])
+    if(max(correlations.gsea.stats.ic50.signif.tissue[ii, , "n"], na.rm=TRUE) >= minsample && max(correlations.gsea.stats.ic50.signif.tissue[ii, , "rho"], na.rm=TRUE) > 0) {
+      count <- count + 1
+      ## IC50
+      xx <- correlations.gsea.stats.ic50.signif.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.gsea.stats.ic50.signif.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.gsea.stats.ic50.signif.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.gsea.stats.ic50.signif.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.ic50.signif.tissue)[[2]]
+      cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      ## AUC
+      xx <- correlations.gsea.stats.auc.signif.tissue[ii, , "rho"]
+      xx[!is.na(xx) & xx < 0] <- 0
+      ll <- correlations.gsea.stats.auc.signif.tissue[ii, , "lower"]
+      ll[!is.na(ll) & ll < 0] <- 0
+      uu <- correlations.gsea.stats.auc.signif.tissue[ii, , "upper"]
+      uu[!is.na(uu) & uu < 0] <- 0
+      uu[!is.na(uu) & uu > 1] <- 1
+      pp <- correlations.gsea.stats.auc.signif.tissue[ii, , "p"]
+      pp[xx == 0] <- 1
+      names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.gsea.stats.auc.signif.tissue)[[2]]
+      cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
+      if((count %% nf) == 1) {
+        pdf(file.path(saveres, sprintf("barplot_gsea_ic50_auc_signif_tissue%i_cgp_ccle_paper.pdf", ceiling(count / nf))), height=14, width=10)
+        par(las=1, mar=c(6, 4, 6, 0), xaxt="n", mfrow=c(3, 2))
+      }
+      # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
+      yylim <- c(0, 1)
+      mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=rep(rainbow(length(xx), v=0.9), each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Pathway-drug associations (all)\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
+      legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
+      # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
+      axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
+      text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
+      text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
+      if((count %% nf) == 0) { dev.off() }
+    }
+  }
+  if((count %% nf) != 0) { dev.off() }
 }
-if((count %% nf) != 0) { dev.off() }
 
 ## barpots for correlations
 ## Spearman
@@ -3505,57 +3525,6 @@ WriteXLS::WriteXLS(x="xt4", ExcelFileName=file.path(saveres, "correlations_auc_p
 
 
 ########################
-
-
-
-
-
-
-# ## drug sensitivity measures per tissue types
-# pdf(file.path(saveres, "barplot_ic50_auc_tissue_cgp_ccle_paper2.pdf"), height=6, width=6)
-# for(ii in 1:length(tissuen)) {
-#   ncelline <- sum(tissue == tissuen[ii])
-#   if(max(correlations.stats.ic50.tissue[ii, , "n"], na.rm=TRUE) >= minsample) {
-#     ## IC50
-#     xx <- correlations.stats.ic50.tissue[ii, , "rho"]
-#     xx[!is.na(xx) & xx < 0] <- 0
-#     ll <- correlations.stats.ic50.tissue[ii, , "lower"]
-#     ll[!is.na(ll) & ll < 0] <- 0
-#     uu <- correlations.stats.ic50.tissue[ii, , "upper"]
-#     uu[!is.na(uu) & uu < 0] <- 0
-#     uu[!is.na(uu) & uu > 1] <- 1
-#     pp <- correlations.stats.ic50.tissue[ii, , "p"]
-#     pp[xx == 0] <- 1
-#     names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.stats.ic50.tissue)[[2]]
-#     cors.ic50 <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-#     ## AUC
-#     xx <- correlations.stats.auc.tissue[ii, , "rho"]
-#     xx[!is.na(xx) & xx < 0] <- 0
-#     ll <- correlations.stats.auc.tissue[ii, , "lower"]
-#     ll[!is.na(ll) & ll < 0] <- 0
-#     uu <- correlations.stats.auc.tissue[ii, , "upper"]
-#     uu[!is.na(uu) & uu < 0] <- 0
-#     uu[!is.na(uu) & uu > 1] <- 1
-#     pp <- correlations.stats.auc.tissue[ii, , "p"]
-#     pp[xx == 0] <- 1
-#     names(xx) <- names(ll) <- names(uu) <- names(pp) <- dimnames(correlations.stats.auc.tissue)[[2]]
-#     cors.auc <- list("rho"=xx, "lower"=ll, "upper"=uu, "p"=pp)
-#     par(las=1, mar=c(6, 4, 6, 0), xaxt="n")
-#     # yylim <- round(range(c(ll, xx, uu), na.rm=TRUE) * 10) / 10
-#     yylim <- c(0, 1)
-#     mycolls <- rep(rainbow(length(xx), v=0.9)
-#     
-#     mp <- barplot(height=rbind(cors.ic50$rho, cors.auc$rho), beside=TRUE, space=c(0.1, 2), col=mycolls, each=2), ylab="Rs", ylim=yylim, angle=c(45, -45), density=c(100, 40), main=sprintf("Drug sensitivity measures\n%s (%i cell lines)", gsub("_", " ", tissuen[ii]), ncelline))
-#     # legend("topleft", legend=c("IC50", "AUC"), fill=c("black", "black"), density=c(100, 40), bty="n", cex=1)
-#     # plotrix::plotCI(x=mp, y=rbind(cors.ic50$rho, cors.auc$rho), li=rbind(cors.ic50$lower, cors.auc$lower), ui=rbind(cors.ic50$upper, cors.auc$upper), err="y", pch=".", add=TRUE, sfrac=0.0025)
-#     axis(1, at=seq(1, length(xx), by=1), labels=FALSE)
-#     text(x=apply(mp, 2, mean) + 1.45, y=par("usr")[3] - (par("usr")[4] * 0.05), pos=2, labels=toupper(names(xx)), srt=45, xpd=NA, font=2)
-#     text(x=mp[1, ], y=cors.ic50$rho, pos=ifelse(is.na(cors.ic50$rho) | cors.ic50$rho < 0, 1, 3), labels=ifelse(cors.ic50$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-#     text(x=mp[2, ], y=cors.auc$rho, pos=ifelse(is.na(cors.auc$rho) | cors.auc$rho < 0, 1, 3), labels=ifelse(cors.auc$p < 0.05, "*", " "), xpd=NA, font=2, cex=1.5, offset=0)
-#   }
-# }
-# dev.off()
-
 
 ## load results for all tissues combined
 load(file.path(saveres, "correlations_stats.RData"))
