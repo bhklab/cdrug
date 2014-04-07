@@ -95,7 +95,7 @@ All the files required  to run the automated analysis pipeline are now in place.
 Run the R scripts
 -----------------
 
-Open  a terminal  window and  go to the CDRUG directory.  You can  easily  run the analysis pipeline either  in batch  mode  or in a R session. Before  running  the pipeline  you can  specify  the number of CPU cores you want to allocate to the analysis (by default  only 1 CPU core  will be used). To do so, open  the script CDRUG pipeline.R and update line #33:
+Open  a terminal  window and  go to the CDRUG directory.  You can  easily  run the analysis pipeline either  in batch  mode  or in a R session. Before  running  the pipeline  you can  specify  the number of CPU cores you want to allocate to the analysis (by default  only 1 CPU core  will be used). To do so, open  the script CDRUG pipeline.R and update line #41:
 
 nbcore <- 4
 
@@ -116,3 +116,33 @@ source("CDRUG pipeline.R")
 Key messages will be displayed to monitor the progress of the analysis.
 
 The analysis pipeline was developed so that  all intermediate analysis results are  saved in the directories data and  saveres. Therefore, in case of interruption, the user can rerun the pipeline which will restart where it stopped.
+
+
+Additional parameters
+---------------------
+
+* cosmic.version: Version of the COSMIC database ("v68" as for 2014-04-07; see ftp://ftp.sanger.ac.uk//pub/CGP/cell_lines_project/data_export/)
+
+* tissue.specific: Should the tissue-specific analyses be performed (lengthy process). Default is FALSE.
+
+* saveres: Path to te directory where all teh results should be stored. Default is "./saveres"
+
+* topvar: Number of most variant gene expressions to be used to compute correlation between gene expression profiles of cell lines. Default is 1000.
+
+* minsample: Minimum number of samples to compute the Spearman correlation. Default is 10.
+
+* myfdr: Maximum false discovery rate (FDR) threshold for gene-drug and pathway-drug associations. Default is 20%
+
+* genedrugm: Method to estimate the association gene-drug, controlled for tissue type. Method "lm" = linear regression; "cindex" = concordance index. Default is "lm".
+
+* gsea.exec: Path to the java executable for GSEA. Default is "./gsea2-2.0.14.jar".
+
+* gsea.nperm: Number of random geneset permutations for prerank GSEA. Defaults is 1000.
+
+* genesets.filen: File containing the geneset definitions. Default is "./c5.all.v4.0.entrez.gmt".
+
+* min.geneset.size: Minimum size for a geneset to be analyzed in prerank GSEA. Default is 15.
+
+* max.geneset.size: aximum size for a geneset to be analyzed in prerank GSEA. Default is 250.
+
+
