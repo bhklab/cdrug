@@ -481,7 +481,9 @@ savecor <- savecor[sapply(savecor, ncol) > 0]
 WriteXLS::WriteXLS("savecor", ExcelFileName=file.path(saveres, "correlations_stats.xls"), row.names=TRUE)
 
 save(list=c("correlations", "correlations.stats"), compress=TRUE, file=file.path(saveres, "correlations_stats.RData"))
-save(list=c("correlations.stats.ic50.tissue", "correlations.stats.auc.tissue"), compress=TRUE, file=file.path(saveres, "correlations_stats_tissue.RData"))
+if (tissue.specific) {
+  save(list=c("correlations.stats.ic50.tissue", "correlations.stats.auc.tissue"), compress=TRUE, file=file.path(saveres, "correlations_stats_tissue.RData"))
+}
 
 ## barplots for paper
 pdf(file.path(saveres, "barplot_ic50_auc_cgp_ccle_paper.pdf"), height=6, width=6)
