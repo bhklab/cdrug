@@ -7,6 +7,25 @@
 ########################
 ## functions
 
+## get COSMIC annotations
+getCosmic <- function(em, passw, directory="tmp") {
+  if (missing(em)) { stop ("Email must be provided") }
+  if (missing(passw)) { stop ("Password must be provided") } 
+  myagent <- "Firefox/23.0" 
+  mycurl <- RCurl::getCurlHandle()
+  curlSetOpt(cookiejar=file.path(directory, "cookies.txt"), useragent=myagent, followlocation=TRUE, autoreferer=TRUE, curl=mycurl)
+  params <- list("email"=em, "password"=passw)
+  resp <- postForm("https://cancer.sanger.ac.uk/cosmic/login", .params=params, curl=mycurl, style="POST")
+  curlSetOpt(cookiejar=file.path(directory, "cookies.txt"), useragent=myagent, curl=mycurl)
+  resp <-getBinaryURL("http://cancer.sanger.ac.uk/files/cosmic/current_release/CosmicCompleteExport.tsv.gz", curl=mycurl)
+  if (!file.exists(file.path(directory))) { dir.create(file.path(directory), showWarnings=FALSE, recursive=TRUE) }
+  myfl <- file(file.path(directory, "CosmicCompleteExport.tsv.gz"), "wb")
+  writeBin(resp, myfl)
+  close(myfl)
+  unlink(file.path(directory, "cookies.txt"))
+  return (0)
+}
+
 ## gene set enrichment analysis
 gsea.prerank <- function(exe.path, gmt.path, rank.path, chip.path, gsea.collapse=FALSE, nperm=1000, scoring.scheme=c("weighted", "weighted_p2", "weighted_p1.5", "classic"), make.sets=TRUE, include.only.symbols=FALSE, plot.top.x=20, set.max=500, set.min=15, zip.report=FALSE, gsea.report, gsea.out, replace.res=FALSE, gsea.seed=987654321) {
 	exe.path <- path.expand(exe.path)

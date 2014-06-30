@@ -79,34 +79,50 @@ file.copy(from=file.path(rawpath, "dwl", "gdsc_compounds_conc_w2.csv"), to=file.
 myfn <- file.path(saveres, "cosmic_annotations.RData")
 if(!file.exists(myfn)) {
   message("Download COSMIC annotations for cell lines")
-  dwl.status <- download.file(url=sprintf("ftp://ftp.sanger.ac.uk//pub/CGP/cell_lines_project/data_export/CosmicCellLineProject_%s.tsv.gz", cosmic.version), destfile=file.path(rawpath, "dwl", sprintf("CosmicCellLineProject_%s.tsv.gz", cosmic.version)), quiet=TRUE)
-  if(dwl.status != 0) { stop("Download failed, please rerun the pipeline! It may be that there is a new version of the file CosmicCellLineProject, please look at ftp://ftp.sanger.ac.uk/pub/CGP/cosmic/data_export/ and update the script accordingly ...") }
-  ## untar
-  res <- R.utils::gunzip(filename=file.path(rawpath, "dwl", sprintf("CosmicCellLineProject_%s.tsv.gz", cosmic.version)), overwrite=TRUE)
-  file.copy(from=file.path(rawpath, "dwl", sprintf("CosmicCellLineProject_%s.tsv", cosmic.version)), to=file.path(rawpath, "cosmic_celline_collection.csv"))
+  myfn2 <- file.path(path.cell, "dwl", "cosmic_cell_line_collection.txt")
+  if(!file.exists(myfn2)) {
+    dir.create(file.path(path.cell, "dwl"), showWarnings=FALSE, recursive=TRUE)
+    dwl.status <- getCosmic(em="bhk.labgroup@gmail.com", passw="pharmacogenomics", directory=file.path(path.cell, "dwl"))
+    # dwl.status <- download.file(url=sprintf("http://cancer.sanger.ac.uk/files/cosmic/current_release/CosmicCompleteExport.tsv.gz"), destfile=file.path(path.cell, "dwl", sprintf("CosmicCompleteExport.tsv.gz")), quiet=TRUE)
+    if(dwl.status != 0) { stop("Download failed, please rerun the pipeline") }
+    ## untar
+    res <- R.utils::gunzip(filename=file.path(path.cell, "dwl", sprintf("CosmicCompleteExport.tsv.gz")), overwrite=TRUE)
+    file.copy(from=file.path(path.cell, "dwl", "CosmicCompleteExport.tsv"), to=myfn2)
+  }
   message("Process COSMIC annotations")
-  cosmic.celline <- read.csv(file=file.path(rawpath, "cosmic_celline_collection.csv"), sep="\t")
+  cosmic.celline <- read.csv(file=file.path(path.cell, "dwl", "cosmic_cell_line_collection.txt"), sep="\t")
   # cosmic.celline <- cosmic.celline[- c(grep("row selected", cosmic.celline[ ,1]), grep("rows selected", cosmic.celline[ ,1])), , drop=FALSE]
   cosmic.celline <- cosmic.celline[complete.cases(cosmic.celline[ , c("Sample.name", "Sample.source")]) & cosmic.celline[ , "Sample.source"] == "cell-line", , drop=FALSE]
-  cosmic.celline[cosmic.celline == "" | cosmic.celline == " " | cosmic.celline == "  "] <- NA
+  cosmic.celline[cosmic.celline == "NS" | cosmic.celline == "" | cosmic.celline == " " | cosmic.celline == "  "] <- NA
   ## merge the gene targets
-  dupln <- unique(cosmic.celline[ , "Sample.name"][duplicated(cosmic.celline[ , "Sample.name"])])
+  dupln <- sort(unique(cosmic.celline[ , "Sample.name"][duplicated(cosmic.celline[ , "Sample.name"])]))
   tt <- cosmic.celline
+  ## select unique cell lines
   iix.rm <- NULL
   for(i in 1:length(dupln)) {
     duplix <- cosmic.celline[ ,"Sample.name"] == dupln[i]
     iix <- sort((which(duplix)), decreasing=FALSE)[1]
     iix.rm <- c(iix.rm, setdiff(which(duplix), iix))
-    tt[iix, "Gene.name"] <- paste(cosmic.celline[duplix, "Gene.name"], collapse="///")
-    tt[iix, "UniProt.ID"] <- paste(cosmic.celline[duplix, "UniProt.ID"], collapse="///")
-    tt[iix, "Zygosity"] <- paste(cosmic.celline[duplix, "Zygosity"], collapse="///")
-    tt[iix, "CDS_MUT_SYNTAX"] <- paste(cosmic.celline[duplix, "CDS_MUT_SYNTAX"], collapse="///")
-    tt[iix, "AA_MUT_SYNTAX"] <- paste(cosmic.celline[duplix, "AA_MUT_SYNTAX"], collapse="///")
-    tt[iix, "NCBI36.genome.position"] <- paste(cosmic.celline[duplix, "NCBI36.genome.position"], collapse="///")
-    tt[iix, "GRCh37.genome.position"] <- paste(cosmic.celline[duplix, "GRCh37.genome.position"], collapse="///")
+    ## get the most frequent tissue type
+    tissuet <- table(cosmic.celline[duplix, "Primary.site"])
+    if (length(tissuet) == 0) {
+      tt[iix, "Primary.site"] <- NA
+    } else {
+      tt[iix, "Primary.site"] <- names(sort(tissuet, decreasing=TRUE))[1]
+    }
+    # tt[iix, "Gene.name"] <- paste(cosmic.celline[duplix, "Gene.name"], collapse="///")
+    # tt[iix, "UniProt.ID"] <- paste(cosmic.celline[duplix, "UniProt.ID"], collapse="///")
+    # tt[iix, "Zygosity"] <- paste(cosmic.celline[duplix, "Zygosity"], collapse="///")
+    # tt[iix, "CDS_MUT_SYNTAX"] <- paste(cosmic.celline[duplix, "CDS_MUT_SYNTAX"], collapse="///")
+    # tt[iix, "AA_MUT_SYNTAX"] <- paste(cosmic.celline[duplix, "AA_MUT_SYNTAX"], collapse="///")
+    # tt[iix, "NCBI36.genome.position"] <- paste(cosmic.celline[duplix, "NCBI36.genome.position"], collapse="///")
+    # tt[iix, "GRCh37.genome.position"] <- paste(cosmic.celline[duplix, "GRCh37.genome.position"], collapse="///")
   }
   tt <- tt[-iix.rm, , drop=FALSE]
+  tt <- tt[!is.na(tt[ , "Sample.name"]), , drop=FALSE]
   rownames(tt) <- tt[ , "Sample.name"]
+  ## remove unnecessary annotations
+  tt <- tt[ , c("Sample.name", "ID_sample", "ID_tumour", "Primary.site", "Site.subtype", "Primary.histology", "Histology.subtype", "Sample.source", "Tumour.origin", "Comments"), drop=FALSE]
   cosmic.celline <- tt
   save(list=c("cosmic.celline"), compress=TRUE, file=myfn)
 } else { load(myfn) }
