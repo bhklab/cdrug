@@ -17,7 +17,7 @@ require(R.utils) || stop("Library R.utils is not available!")
 ########################
 ## download data
 ########################
-ftpdir <- "ftp://ftp.ebi.ac.uk//pub/databases/microarray/data/experiment/MTAB/E-MTAB-783/"
+ftpdir <- "ftp://ftp.ebi.ac.uk/pub/databases/microarray/data/experiment/MTAB/E-MTAB-783/"
 myfn <- file.path(rawpath, "celfile_timestamp.RData")
 if(!file.exists(myfn)) {
   message("Download genomic data")
@@ -64,13 +64,13 @@ file.copy(from=file.path(rawpath, "dwl", "E-MTAB-783.sdrf.txt"), to=file.path(ra
   
 ## download drug sensitivity (release 2)
 message("Download drug sensitivity measurements")
-dwl.status <- download.file(url="ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/releases/release-2.0/gdsc_manova_input_w2.csv", destfile=file.path(rawpath, "dwl", "gdsc_manova_input_w2.csv"), quiet=TRUE)
+dwl.status <- download.file(url="ftp://ftp.sanger.ac.uk/pub/project/cancerrxgene/releases/release-2.0/gdsc_manova_input_w2.csv", destfile=file.path(rawpath, "dwl", "gdsc_manova_input_w2.csv"), quiet=TRUE)
 if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
 file.copy(from=file.path(rawpath, "dwl", "gdsc_manova_input_w2.csv"), to=file.path(rawpath, "cgp_drug_sensitivity.csv"))
 
 ## download drug concentration (release 2)
 message("Download screening drug concentrations")
-dwl.status <- download.file(url="ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/current_release/gdsc_compounds_conc_w2.csv", destfile=file.path(rawpath, "dwl", "gdsc_compounds_conc_w2.csv"), quiet=TRUE)
+dwl.status <- download.file(url="ftp://ftp.sanger.ac.uk//pub/project/cancerrxgene/current_release/gdsc_compounds_conc_w2.csv", destfile=file.path(rawpath, "dwl", "gdsc_compounds_conc_w2.csv"), quiet=TRUE)
 if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
 file.copy(from=file.path(rawpath, "dwl", "gdsc_compounds_conc_w2.csv"), to=file.path(rawpath, "cgp_drug_concentration.csv"))
   
@@ -79,18 +79,18 @@ file.copy(from=file.path(rawpath, "dwl", "gdsc_compounds_conc_w2.csv"), to=file.
 myfn <- file.path(saveres, "cosmic_annotations.RData")
 if(!file.exists(myfn)) {
   message("Download COSMIC annotations for cell lines")
-  myfn2 <- file.path(path.cell, "dwl", "cosmic_cell_line_collection.txt")
+  myfn2 <- file.path(rawpath, "cosmic_cell_line_collection.txt")
   if(!file.exists(myfn2)) {
-    dir.create(file.path(path.cell, "dwl"), showWarnings=FALSE, recursive=TRUE)
-    dwl.status <- getCosmic(em="bhk.labgroup@gmail.com", passw="pharmacogenomics", directory=file.path(path.cell, "dwl"))
-    # dwl.status <- download.file(url=sprintf("http://cancer.sanger.ac.uk/files/cosmic/current_release/CosmicCompleteExport.tsv.gz"), destfile=file.path(path.cell, "dwl", sprintf("CosmicCompleteExport.tsv.gz")), quiet=TRUE)
+    dir.create(file.path(rawpath, "dwl"), showWarnings=FALSE, recursive=TRUE)
+    dwl.status <- getCosmic(em="bhk.labgroup@gmail.com", passw="pharmacogenomics", directory=file.path(rawpath, "dwl"))
+    # dwl.status <- download.file(url=sprintf("http://cancer.sanger.ac.uk/files/cosmic/current_release/CosmicCompleteExport.tsv.gz"), destfile=file.path(rawpath, "dwl", sprintf("CosmicCompleteExport.tsv.gz")), quiet=TRUE)
     if(dwl.status != 0) { stop("Download failed, please rerun the pipeline") }
     ## untar
-    res <- R.utils::gunzip(filename=file.path(path.cell, "dwl", sprintf("CosmicCompleteExport.tsv.gz")), overwrite=TRUE)
-    file.copy(from=file.path(path.cell, "dwl", "CosmicCompleteExport.tsv"), to=myfn2)
+    res <- R.utils::gunzip(filename=file.path(rawpath, "dwl", sprintf("CosmicCompleteExport.tsv.gz")), overwrite=TRUE)
+    file.copy(from=file.path(rawpath, "dwl", "CosmicCompleteExport.tsv"), to=myfn2)
   }
   message("Process COSMIC annotations")
-  cosmic.celline <- read.csv(file=file.path(path.cell, "dwl", "cosmic_cell_line_collection.txt"), sep="\t")
+  cosmic.celline <- read.csv(file=file.path(rawpath, "cosmic_cell_line_collection.txt"), sep="\t")
   # cosmic.celline <- cosmic.celline[- c(grep("row selected", cosmic.celline[ ,1]), grep("rows selected", cosmic.celline[ ,1])), , drop=FALSE]
   cosmic.celline <- cosmic.celline[complete.cases(cosmic.celline[ , c("Sample.name", "Sample.source")]) & cosmic.celline[ , "Sample.source"] == "cell-line", , drop=FALSE]
   cosmic.celline[cosmic.celline == "NS" | cosmic.celline == "" | cosmic.celline == " " | cosmic.celline == "  "] <- NA
@@ -131,7 +131,7 @@ if(!file.exists(myfn)) {
 myfn <- file.path(saveres, "gdsc_annotations.RData")
 if(!file.exists(myfn)) {
   message("Download GDSC annotations for cell liness")
-  dwl.status <- download.file(url="ftp://ftp.sanger.ac.uk/pub4/cancerrxgene/current_release/gdsc_cell_lines_w2.csv", destfile=file.path(rawpath, "dwl", "gdsc_cell_lines_w2.csv"), quiet=TRUE)
+  dwl.status <- download.file(url="ftp://ftp.sanger.ac.uk//pub/project/cancerrxgene/current_release/gdsc_cell_lines_w2.csv", destfile=file.path(rawpath, "dwl", "gdsc_cell_lines_w2.csv"), quiet=TRUE)
   file.copy(from=file.path(rawpath, "dwl", "gdsc_cell_lines_w2.csv"), to=file.path(rawpath, "cgp_celline_collection.csv"))
   if(dwl.status != 0) { stop("Download failed, please rerun the pipeline!") }
   gdsc.celline <- read.csv(file=file.path(rawpath, "cgp_celline_collection.csv"))
