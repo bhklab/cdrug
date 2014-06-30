@@ -240,7 +240,7 @@ for(i in 1:nrow(drug.map.gsk.ccle)) {
   xxlim <- round(range(ic50.2, na.rm=TRUE) * 10) / 10
   nnn <- sum(complete.cases(ic50.1, ic50.2))
   if(nnn >= minsample) {
-    cc <- cor.test(ic50.1, ic50.2, method="spearman", use="complete.obs", alternative="greater")
+    cc <-  source(ic50.1, ic50.2, method="spearman", use="complete.obs", alternative="greater")
   } else {
     cc <- list("estimate"=NA, "p.value"=NA)
   }

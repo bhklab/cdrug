@@ -5,15 +5,6 @@
 ########################
 
 
-
-## This script runs the following scripts:
-##  1. 'CDRUG_foo.R' defining all functions required for the rest of the analyses
-##  2. 'normalization_cgp.R' performing curation, annotation and normalization of CGP data
-##  3. 'normalization_ccle.R' performing curation, annotation and normalization of CCLE data
-##  4. 'CDRUG_format.R' performing additional curation to identify common cell lines, tissue types and drugs investigated in CGP and CCLE
-##  5. 'CDRUG_pipeline.R' computing all the correlations and generating all the tables/figures for the paper
-
-
 ## remove all existing objects from the workspace
 rm(list=ls(all=TRUE))
 
@@ -140,7 +131,7 @@ if (progress.log["step.4", "progress"] != "done") {
 message("\t-> DONE")
 
 ########################
-## script performing teh correlation analyses at the level of gene expressions
+## script performing the correlation analyses at the level of gene expressions
 
 message("\n---------------------------------------------------------\n| Correlations of gene expressions between GGP and CCLE |\n---------------------------------------------------------")
 if (progress.log["step.5", "progress"] != "done") {

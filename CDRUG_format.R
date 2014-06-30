@@ -145,9 +145,6 @@ nn <- intersect(as.character(match.ccle.cgp[ , "CCLE.cell.line"]), rownames(muta
 iix0 <- which(is.element(as.character(match.ccle.cgp[ , "CCLE.cell.line"]), nn))
 iix <- match(as.character(match.ccle.cgp[iix0, "CCLE.cell.line"]), rownames(mutation.ccle))
 rownames(mutation.ccle)[iix] <- as.character(match.ccle.cgp[iix0, "CGP.cell.line"])
-## update ccle cell line collection
-nn <- intersect(as.character(match.ccle.cgp[ , "CCLE.cell.line"]), as.character(drugconc.ccle[ , "cellid"]))
-iix0 <- which(is.element(as.character(match.ccle.cgp[ , "CCLE.cell.line"]), nn))
 
 ## GSK
 # ## matching with CGP and CCLE
