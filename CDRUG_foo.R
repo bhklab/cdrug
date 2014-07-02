@@ -16,7 +16,7 @@ getCosmic <- function(em, passw, directory="tmp") {
   curlSetOpt(cookiejar=file.path(directory, "cookies.txt"), useragent=myagent, followlocation=TRUE, autoreferer=TRUE, curl=mycurl)
   params <- list("email"=em, "password"=passw)
   resp <- RCurl::postForm("https://cancer.sanger.ac.uk/cosmic/login", .params=params, curl=mycurl, style="POST")
-  curlSetOpt(cookiejar=file.path(directory, "cookies.txt"), useragent=myagent, curl=mycurl)
+  RCurl::curlSetOpt(cookiejar=file.path(directory, "cookies.txt"), useragent=myagent, curl=mycurl)
   resp <- RCurl::getBinaryURL("http://cancer.sanger.ac.uk/files/cosmic/current_release/CosmicCompleteExport.tsv.gz", curl=mycurl)
   if (!file.exists(file.path(directory))) { dir.create(file.path(directory), showWarnings=FALSE, recursive=TRUE) }
   myfl <- file(file.path(directory, "CosmicCompleteExport.tsv.gz"), "wb")
