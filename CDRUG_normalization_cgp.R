@@ -12,7 +12,7 @@ if(!file.exists(rawpath)) { dir.create(rawpath, showWarnings=FALSE, recursive=TR
   
 require(gdata) || stop("Library gdata is not available!")
 require(R.utils) || stop("Library R.utils is not available!")
-
+require(RCurl) || stop("Library RCurl is not available!")
 
 ########################
 ## download data
