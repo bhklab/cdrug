@@ -18,7 +18,7 @@ source(file.path("CDRUG_foo.R"))
 
 ## set method for downloading
 # options(download.file.method="auto")
-options(download.file.method="curl")
+options(download.file.method="wget")
 ## change to curl, wget or internal depending on your system
 
 ## prevent strings to be converted into factors

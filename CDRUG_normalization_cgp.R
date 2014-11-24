@@ -90,41 +90,41 @@ if(!file.exists(myfn)) {
     file.copy(from=file.path(rawpath, "dwl", "CosmicCompleteExport.tsv"), to=myfn2)
   }
   message("Process COSMIC annotations")
-  cosmic.celline <- read.csv(file=file.path(rawpath, "cosmic_cell_line_collection.txt"), sep="\t")
-  # cosmic.celline <- cosmic.celline[- c(grep("row selected", cosmic.celline[ ,1]), grep("rows selected", cosmic.celline[ ,1])), , drop=FALSE]
-  cosmic.celline <- cosmic.celline[complete.cases(cosmic.celline[ , c("Sample.name", "Sample.source")]) & cosmic.celline[ , "Sample.source"] == "cell-line", , drop=FALSE]
-  cosmic.celline[cosmic.celline == "NS" | cosmic.celline == "" | cosmic.celline == " " | cosmic.celline == "  "] <- NA
-  ## merge the gene targets
-  dupln <- sort(unique(cosmic.celline[ , "Sample.name"][duplicated(cosmic.celline[ , "Sample.name"])]))
-  tt <- cosmic.celline
-  ## select unique cell lines
-  iix.rm <- NULL
-  for(i in 1:length(dupln)) {
-    duplix <- cosmic.celline[ ,"Sample.name"] == dupln[i]
-    iix <- sort((which(duplix)), decreasing=FALSE)[1]
-    iix.rm <- c(iix.rm, setdiff(which(duplix), iix))
-    ## get the most frequent tissue type
-    tissuet <- table(cosmic.celline[duplix, "Primary.site"])
-    if (length(tissuet) == 0) {
-      tt[iix, "Primary.site"] <- NA
-    } else {
-      tt[iix, "Primary.site"] <- names(sort(tissuet, decreasing=TRUE))[1]
-    }
-    # tt[iix, "Gene.name"] <- paste(cosmic.celline[duplix, "Gene.name"], collapse="///")
-    # tt[iix, "UniProt.ID"] <- paste(cosmic.celline[duplix, "UniProt.ID"], collapse="///")
-    # tt[iix, "Zygosity"] <- paste(cosmic.celline[duplix, "Zygosity"], collapse="///")
-    # tt[iix, "CDS_MUT_SYNTAX"] <- paste(cosmic.celline[duplix, "CDS_MUT_SYNTAX"], collapse="///")
-    # tt[iix, "AA_MUT_SYNTAX"] <- paste(cosmic.celline[duplix, "AA_MUT_SYNTAX"], collapse="///")
-    # tt[iix, "NCBI36.genome.position"] <- paste(cosmic.celline[duplix, "NCBI36.genome.position"], collapse="///")
-    # tt[iix, "GRCh37.genome.position"] <- paste(cosmic.celline[duplix, "GRCh37.genome.position"], collapse="///")
-  }
-  tt <- tt[-iix.rm, , drop=FALSE]
-  tt <- tt[!is.na(tt[ , "Sample.name"]), , drop=FALSE]
-  rownames(tt) <- tt[ , "Sample.name"]
-  ## remove unnecessary annotations
-  tt <- tt[ , c("Sample.name", "ID_sample", "ID_tumour", "Primary.site", "Site.subtype", "Primary.histology", "Histology.subtype", "Sample.source", "Tumour.origin", "Comments"), drop=FALSE]
-  cosmic.celline <- tt
-  save(list=c("cosmic.celline"), compress=TRUE, file=myfn)
+   cosmic.celline <- read.csv(file=myfn2, sep="\t")
+   # cosmic.celline <- cosmic.celline[- c(grep("row selected", cosmic.celline[ ,1]), grep("rows selected", cosmic.celline[ ,1])), , drop=FALSE]
+   cosmic.celline <- cosmic.celline[complete.cases(cosmic.celline[ , c("Sample.name", "Sample.source")]) & cosmic.celline[ , "Sample.source"] == "cell-line", , drop=FALSE]
+   cosmic.celline[cosmic.celline == "NS" | cosmic.celline == "" | cosmic.celline == " " | cosmic.celline == "  "] <- NA
+   ## merge the gene targets
+   dupln <- sort(unique(cosmic.celline[ , "Sample.name"][duplicated(cosmic.celline[ , "Sample.name"])]))
+   tt <- cosmic.celline
+   ## select unique cell lines
+   iix.rm <- NULL
+   for(i in 1:length(dupln)) {
+     duplix <- cosmic.celline[ ,"Sample.name"] == dupln[i]
+     iix <- sort((which(duplix)), decreasing=FALSE)[1]
+     iix.rm <- c(iix.rm, setdiff(which(duplix), iix))
+     ## get the most frequent tissue type
+     tissuet <- table(cosmic.celline[duplix, "Primary.site"])
+     if (length(tissuet) == 0) {
+       tt[iix, "Primary.site"] <- NA
+     } else {
+       tt[iix, "Primary.site"] <- names(sort(tissuet, decreasing=TRUE))[1]
+     }
+     # tt[iix, "Gene.name"] <- paste(cosmic.celline[duplix, "Gene.name"], collapse="///")
+     # tt[iix, "UniProt.ID"] <- paste(cosmic.celline[duplix, "UniProt.ID"], collapse="///")
+     # tt[iix, "Zygosity"] <- paste(cosmic.celline[duplix, "Zygosity"], collapse="///")
+     # tt[iix, "CDS_MUT_SYNTAX"] <- paste(cosmic.celline[duplix, "CDS_MUT_SYNTAX"], collapse="///")
+     # tt[iix, "AA_MUT_SYNTAX"] <- paste(cosmic.celline[duplix, "AA_MUT_SYNTAX"], collapse="///")
+     # tt[iix, "NCBI36.genome.position"] <- paste(cosmic.celline[duplix, "NCBI36.genome.position"], collapse="///")
+     # tt[iix, "GRCh37.genome.position"] <- paste(cosmic.celline[duplix, "GRCh37.genome.position"], collapse="///")
+   }
+   tt <- tt[-iix.rm, , drop=FALSE]
+   tt <- tt[!is.na(tt[ , "Sample.name"]), , drop=FALSE]
+   rownames(tt) <- tt[ , "Sample.name"]
+   ## remove unnecessary annotations
+   tt <- tt[ , c("Sample.name", "ID_sample", "ID_tumour", "Primary.site", "Site.subtype", "Primary.histology", "Histology.subtype", "Sample.source", "Tumour.origin", "Comments"), drop=FALSE]
+   cosmic.celline <- tt
+   save(list=c("cosmic.celline"), compress=TRUE, file=myfn)
 } else { load(myfn) }
 
 ## annotations from GDSC (Genomics of Drug Sensitivity in Cancer)
@@ -144,11 +144,11 @@ if(!file.exists(myfn)) {
 } else { load(myfn) }
 
 ## merge GDSC and COSMIC annotations through COSMIC_ID
-message("Merge COSMIC and GDSC annotations for cell liness")
+message("Merge COSMIC and GDSC annotations for cell lines")
 ## comflict between COSMIC and GDSC: NTERA-2_cl_D1 -> NTERA-S-cl-D1
-myx <- which(rownames(cosmic.celline) == "NTERA-2_cl_D1")
-rownames(cosmic.celline)[myx] <- "NTERA-S-cl-D1"
-cosmic.celline[myx, "Sample.name"] <- "NTERA-S-cl-D1"
+# myx <- which(rownames(cosmic.celline) == "NTERA-2_cl_D1")
+# rownames(cosmic.celline)[myx] <- "NTERA-S-cl-D1"
+# cosmic.celline[myx, "Sample.name"] <- "NTERA-S-cl-D1"
 iix <- which(complete.cases(gdsc.celline[ , c("CELL_LINE_NAME", "COSMIC_ID")]) & !is.element(gdsc.celline[ , "COSMIC_ID"], cosmic.celline[ , "ID_sample"]) & !is.element(gdsc.celline[ , "CELL_LINE_NAME"], cosmic.celline[ , "Sample.name"]))
 tt <- data.frame(matrix(NA, nrow=nrow(cosmic.celline) + length(iix), ncol=ncol(cosmic.celline), dimnames=list(c(rownames(cosmic.celline), rownames(gdsc.celline)[iix]), colnames(cosmic.celline))))
 tt[rownames(cosmic.celline), ] <- cosmic.celline
